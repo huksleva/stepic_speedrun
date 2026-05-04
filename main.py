@@ -1,13 +1,10 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import os
 from templates.enter_next_page import next_page
 
 # === НАСТРОЙКИ ===
 # Ссылка на сайт
-url = "https://stepik.org/lesson/297514/step/6?unit=279274"
+url = "https://stepik.org/lesson/297514/step/2?unit=279274"
 
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 # Путь к НОВОМУ профилю (создастся автоматически при первом запуске)
