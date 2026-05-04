@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
+from templates.enter_next_page import next_page
 
 # === НАСТРОЙКИ ===
 # Ссылка на сайт
@@ -40,19 +41,8 @@ with webdriver.Chrome(options=options) as driver:
     print(f"📄 Страница: {driver.title}")
     print("\n💡 Войдите в аккаунт вручную — сессия сохранится для следующих запусков!")
 
-    # Ждём элементы до 30 секунд
-    wait = WebDriverWait(driver, 30)
-    # Ищем кнопку "Далее"
-    button = wait.until(EC.element_to_be_clickable(
-        (By.CSS_SELECTOR, "button.lesson_next-btn")
-    ))
-    # Кликаем по ней
-    if button:
-        print("✅ Кнопка найдена!")
-        button.click()
-        print("🔘 Клик выполнен!")
-    else:
-        print("❌ Кнопка не найдена")
+    # Переходим на следующую страницу
+    next_page(driver)
 
 
 
