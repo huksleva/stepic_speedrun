@@ -7,7 +7,7 @@ from templates.bool_fun import is_end
 
 # === НАСТРОЙКИ ===
 # Ссылка на первую страницу курса Степика
-url = "https://stepik.org/lesson/297508/step/1?unit=279268"
+url = os.environ.get("START_URL")
 
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 # Путь к НОВОМУ профилю (создастся автоматически при первом запуске)
