@@ -5,12 +5,21 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def is_end(driver):
-    """Проверяет, находится ли на последней странице курса"""
+    """Проверяет, находится ли на последней странице курса (появилось модальное окно завершения)"""
 
     try:
+        # Ищем модальное окно завершения курса (ждем до 2 секунд)
+        wait = WebDriverWait(driver, 2)
+        wait.until(EC.presence_of_element_located((
+            By.CSS_SELECTOR, ".modal-popup__container"
+        )))
 
-
+        print("✅ Курс завершён! Найдено модальное окно.")
         return True
+
+    except TimeoutException:
+        # Элемент не найден — значит ещё есть шаги
+        return False
     except Exception as e:
         print("Ошибка:", e)
         return False

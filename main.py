@@ -8,6 +8,7 @@ from templates.task import (
     click_send_button,
     click_try_again_button
 )
+from templates.bool_fun import is_end
 from dotenv import load_dotenv
 import time
 
@@ -54,7 +55,7 @@ with webdriver.Chrome(options=options) as driver:
     is_on_task = True
     while True:
         # Идём до страницы с заданием
-        # Если попадаем на страницу с нерешённым заданием
+        # Если попадаем на страницу с нерешённым заданием, то решаем его
         if not next_page(driver):
             task_text = extract_task_text(driver) # Получаем текст задания
             answer = complete_task(task_text) # Получаем ответ от ИИ
@@ -64,16 +65,10 @@ with webdriver.Chrome(options=options) as driver:
             time.sleep(0.3)
             click_send_button(driver) # Жмём кнопку "Отправить"
 
-
         # Если дошли до конца
-        #if is_end(driver):
-        #    break
+        if is_end(driver):
+            break
 
     input("⏸️ Нажмите Enter для завершения работы приложения...")
-
-
-
-
-
 
 
