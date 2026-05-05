@@ -35,8 +35,9 @@ with webdriver.Chrome(options=options) as driver:
     driver.get(url)
     print(f"📄 Страница: {driver.title}")
 
-    # Переходим на следующую страницу
-    next_page(driver)
+    while True:
+        # Переходим на следующую страницу
+        next_page(driver)
 
 
 
