@@ -1,7 +1,13 @@
 from selenium import webdriver
 import os
 from templates.enter_next_page import next_page
-from templates.task import extract_task_text, complete_task, insert_code_into_editor, click_send_button
+from templates.task import (
+    extract_task_text,
+    complete_task,
+    insert_code_into_editor,
+    click_send_button,
+    click_try_again_button
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -51,6 +57,7 @@ with webdriver.Chrome(options=options) as driver:
         if not next_page(driver):
             task_text = extract_task_text(driver) # Получаем текст задания
             answer = complete_task(task_text) # Получаем ответ от ИИ
+            click_try_again_button(driver) # Нажимаем кнопку "Попробовать снова", если она есть
             insert_code_into_editor(driver, answer) # Вставляем ответ в форму
             click_send_button(driver) # Жмём кнопку "Отправить"
 

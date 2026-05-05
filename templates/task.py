@@ -65,6 +65,7 @@ def extract_task_text(driver) -> str:
 
     return text
 
+
 def complete_task(task_text) -> str:
     url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
     API_KEY = str(os.getenv("API_KEY"))
@@ -98,6 +99,7 @@ def complete_task(task_text) -> str:
     text = data['choices'][0]['message']['content']
     print("Ответ от ИИ:\n", text)
     return text
+
 
 def insert_code_into_editor(driver, code_text: str) -> bool:
     """
@@ -159,6 +161,7 @@ def insert_code_into_editor(driver, code_text: str) -> bool:
             print(f"❌ Ошибка при вставке через textarea: {e2}")
             return False
 
+
 def wait_until_task_done(driver) -> bool:
     """
     Ждёт, пока Степик не проверит задание.
@@ -180,10 +183,23 @@ def wait_until_task_done(driver) -> bool:
         print(f"   ❌ Не найдено")
         return False
 
+
+def click_try_again_button(driver):
+    """Кликает на кнопку попробовать снова, если она есть"""
+    try:
+        btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.again-btn")))
+        btn.click()
+        print("✅ Кнопка 'Попробовать снова' нажата")
+        return wait_until_task_done(driver)  # Проверяем правильный ли код отослал ИИ
+    except TimeoutException:
+        print("❌ Кнопка 'Попробовать снова' не найдена")
+        return False
+
+
 def click_send_button(driver) -> bool:
     """
     Находит и нажимает кнопку 'Отправить' на Stepik.
-    Возвращает True при успехе, False при ошибке.
+    Возвращает True при правильном ответе на задание, False при ошибке.
     """
     wait = WebDriverWait(driver, 10)
     btn = None
@@ -192,28 +208,7 @@ def click_send_button(driver) -> bool:
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))
         btn.click()
         print("✅ Кнопка 'Отправить' нажата")
-        return wait_until_task_done(driver) # Проверяем правильный ли код отослал ИИ
+        return wait_until_task_done(driver)  # Проверяем правильный ли код отослал ИИ
     except TimeoutException:
-        print("⚠️ Кнопка не найдена по классу, пробуем запасной XPath...")
-        try:
-            # Запасной поиск по тексту + классу (игнорирует HTML-комментарии <!-- -->)
-            btn = wait.until(EC.element_to_be_clickable((
-                By.XPATH, "//button[contains(@class, 'submit-submission') and contains(., 'Отправить')]"
-            )))
-            btn.click()
-            print("✅ Кнопка 'Отправить' нажата (через XPath)")
-            return wait_until_task_done(driver) # Проверяем правильный ли код отослал ИИ
-        except TimeoutException:
-            print("❌ Кнопка 'Отправить' не найдена")
-            return False
-        except Exception as e:
-            # 3️ Если элемент найден, но клик перехватывается другим слоем
-            print(e)
-            try:
-                driver.execute_script("arguments[0].click();", btn)
-                print("✅ Клик выполнен через JavaScript")
-                return True
-            except Exception as e2:
-                print(f"❌ Ошибка клика: {e2}")
-                return False
-
+        print("⚠️ Кнопка не найдена по классу")
+        return False
