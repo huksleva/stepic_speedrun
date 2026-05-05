@@ -2,6 +2,7 @@ from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 def next_page(driver):
@@ -15,8 +16,18 @@ def next_page(driver):
     print(f"📍 URL: {driver.current_url}")
     print("=" * 60)
 
+    # Ждём пока загрузится страница. Смотрим на <h2>
     wait = WebDriverWait(driver, 30)
+    try:
+        # Ждём появления ЛЮБОГО <h2>
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "h2")))
+        print("✅ Страница загрузилась")
+    except TimeoutException:
+        print("❌ Страница не загрузилась")
 
+
+
+    wait = WebDriverWait(driver, 1)
 
     # === ШАГ 1: Проверяем, есть ли вкладка "Решения" ===
     # Если вкладка есть, значит м ы на странице с заданием или тестом
@@ -72,6 +83,28 @@ def next_page(driver):
             print(f"   ✅ Клик выполнен (через JavaScript)")
             print(f"    ⚠️ Ошибка:", e)
         print("=" * 60 + "\n")
+
+        # === ⚠️ ЖДЁМ ПЕРЕХОДА НА НОВУЮ СТРАНИЦУ ===
+        print("\n⏳ Ожидание перехода на новую страницу...")
+        try:
+            # Ждём, пока URL изменится
+            wait.until(lambda d: d.current_url != old_url)
+            print(f"   ✅ URL изменился: {driver.current_url}")
+
+            # Дополнительно: ждём загрузки новой страницы
+            wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+            print("   ✅ Новая страница загружена")
+
+            # Небольшая пауза для рендеринга контента Stepik
+            # time.sleep(1)
+
+            return True
+
+        except TimeoutException:
+            print("   ⚠️ URL не изменился за 10 сек — возможно, это последний шаг!")
+            return False
+
+
         return True
     # Если есть вкладка "Решения" и нет надписи "Вы получили", то мы на странице с нерешённым заданием
     elif (solution_label is not None) and (score_label is None):

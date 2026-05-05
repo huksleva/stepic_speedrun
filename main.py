@@ -4,8 +4,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
 
 # === НАСТРОЙКИ ===
-# Ссылка на сайт
-url = "https://stepik.org/lesson/297514/step/2?unit=279274"
+# Ссылка на первую страницу курса Степика
+url = "https://stepik.org/lesson/297508/step/1?unit=279268"
 
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 # Путь к НОВОМУ профилю (создастся автоматически при первом запуске)
@@ -35,9 +35,9 @@ with webdriver.Chrome(options=options) as driver:
     driver.get(url)
     print(f"📄 Страница: {driver.title}")
 
-    while True:
+    while next_page(driver):
         # Переходим на следующую страницу
-        next_page(driver)
+        print("КЛИК")
 
 
 
