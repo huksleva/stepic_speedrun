@@ -1,10 +1,10 @@
 from selenium import webdriver
 import os
-from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
 from templates.task import extract_task_text, complete_task, insert_code_into_editor, click_send_button
-from templates.bool_fun import is_end
+from dotenv import load_dotenv
 
+load_dotenv()
 
 
 
@@ -12,7 +12,7 @@ from templates.bool_fun import is_end
 
 # === НАСТРОЙКИ ===
 # Ссылка на первую страницу курса Степика
-url = os.environ.get("START_URL")
+url = str(os.environ.get("START_URL"))
 
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 # Путь к НОВОМУ профилю (создастся автоматически при первом запуске)

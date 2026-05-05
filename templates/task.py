@@ -159,19 +159,40 @@ def insert_code_into_editor(driver, code_text: str) -> bool:
             print(f"❌ Ошибка при вставке через textarea: {e2}")
             return False
 
+def wait_until_task_done(driver) -> bool:
+    """
+    Ждёт, пока Степик не проверит задание.
+    Returns:
+        bool: True, если успешно, False, если нет
+    """
+    # === Проверяем, есть ли "Вы получили" ===
+    # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
+    print("\n🔎 Ожидание ответа компилятора: поиск надписи 'Вы получили'...")
+    score_label = None
+    wait = WebDriverWait(driver, 30)
+    try:
+        score_label = wait.until(EC.presence_of_element_located((
+            By.CSS_SELECTOR, "span.score-info__score-label"
+        )))
+        print(f"   ✅ Найдено")
+        return True
+    except TimeoutException:
+        print(f"   ❌ Не найдено")
+        return False
+
 def click_send_button(driver) -> bool:
     """
     Находит и нажимает кнопку 'Отправить' на Stepik.
     Возвращает True при успехе, False при ошибке.
     """
     wait = WebDriverWait(driver, 10)
-
+    btn = None
     try:
         # Основной поиск по классу (быстро и стабильно)
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))
         btn.click()
         print("✅ Кнопка 'Отправить' нажата")
-        return True
+        return wait_until_task_done(driver) # Проверяем правильный ли код отослал ИИ
     except TimeoutException:
         print("⚠️ Кнопка не найдена по классу, пробуем запасной XPath...")
         try:
@@ -181,17 +202,18 @@ def click_send_button(driver) -> bool:
             )))
             btn.click()
             print("✅ Кнопка 'Отправить' нажата (через XPath)")
-            return True
+            return wait_until_task_done(driver) # Проверяем правильный ли код отослал ИИ
         except TimeoutException:
             print("❌ Кнопка 'Отправить' не найдена")
             return False
         except Exception as e:
             # 3️ Если элемент найден, но клик перехватывается другим слоем
+            print(e)
             try:
                 driver.execute_script("arguments[0].click();", btn)
                 print("✅ Клик выполнен через JavaScript")
                 return True
-            except:
-                print(f"❌ Ошибка клика: {e}")
+            except Exception as e2:
+                print(f"❌ Ошибка клика: {e2}")
                 return False
 
