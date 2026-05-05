@@ -2,7 +2,6 @@ from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
 
 
 def next_page(driver):
@@ -13,6 +12,7 @@ def next_page(driver):
 
     print("\n" + "=" * 60)
     print("🔍 Функция next_page() запущена")
+    old_url = driver.current_url  # ← Запоминаем текущий URL
     print(f"📍 URL: {driver.current_url}")
     print("=" * 60)
 
@@ -87,6 +87,7 @@ def next_page(driver):
         # === ⚠️ ЖДЁМ ПЕРЕХОДА НА НОВУЮ СТРАНИЦУ ===
         print("\n⏳ Ожидание перехода на новую страницу...")
         try:
+            wait = WebDriverWait(driver, 30)
             # Ждём, пока URL изменится
             wait.until(lambda d: d.current_url != old_url)
             print(f"   ✅ URL изменился: {driver.current_url}")
@@ -94,18 +95,12 @@ def next_page(driver):
             # Дополнительно: ждём загрузки новой страницы
             wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
             print("   ✅ Новая страница загружена")
-
-            # Небольшая пауза для рендеринга контента Stepik
-            # time.sleep(1)
-
             return True
 
         except TimeoutException:
             print("   ⚠️ URL не изменился за 10 сек — возможно, это последний шаг!")
             return False
 
-
-        return True
     # Если есть вкладка "Решения" и нет надписи "Вы получили", то мы на странице с нерешённым заданием
     elif (solution_label is not None) and (score_label is None):
         return False

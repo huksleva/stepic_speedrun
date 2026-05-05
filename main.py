@@ -2,6 +2,8 @@ from selenium import webdriver
 import os
 from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
+from templates.task import get_task, complete_task
+from templates.bool_fun import is_end
 
 # === НАСТРОЙКИ ===
 # Ссылка на первую страницу курса Степика
@@ -35,16 +37,21 @@ with webdriver.Chrome(options=options) as driver:
     driver.get(url)
     print(f"📄 Страница: {driver.title}")
 
-    while next_page(driver):
-        # Переходим на следующую страницу
-        print("КЛИК")
 
+    # Начинаем решать
+    is_on_task = True
+    while True:
+        # Идём до страницы с заданием
+        # Если попадаем на страницу с нерешённым заданием
+        if not next_page(driver):
+            get_task(driver)
+            complete_task(driver)
 
+        # Если дошли до конца
+        if is_end(driver):
+            break
 
-
-
-
-    input("⏸️ Нажмите Enter для закрытия...")
+    input("⏸️ Нажмите Enter для завершения работы приложения...")
 
 
 
