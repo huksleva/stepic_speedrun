@@ -69,7 +69,6 @@ def extract_task_text(driver) -> str:
 def complete_task(task_text) -> str:
     url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
     API_KEY = str(os.getenv("API_KEY"))
-    # task_text = "В ответ пиши только код. Задание: Напиши на SQL запрос к БД с названием 'USER' на удаление"
 
     # Минимальный payload — только нужные поля
     payload = {
@@ -77,7 +76,7 @@ def complete_task(task_text) -> str:
         "messages": [
             {
                 "role": "system",
-                "content": "Ты решаешь задачи для Stepik. Выводи ТОЛЬКО код, без форматирования, без markdown"
+                "content": "Ты решаешь задачи для Stepik. Выводи ТОЛЬКО код, без markdown, без ```sql и тд"
             },
             {
                 "role": "user",

@@ -9,6 +9,7 @@ from templates.task import (
     click_try_again_button
 )
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -58,7 +59,9 @@ with webdriver.Chrome(options=options) as driver:
             task_text = extract_task_text(driver) # Получаем текст задания
             answer = complete_task(task_text) # Получаем ответ от ИИ
             click_try_again_button(driver) # Нажимаем кнопку "Попробовать снова", если она есть
+            time.sleep(0.3)
             insert_code_into_editor(driver, answer) # Вставляем ответ в форму
+            time.sleep(0.3)
             click_send_button(driver) # Жмём кнопку "Отправить"
 
 
