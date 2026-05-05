@@ -15,7 +15,7 @@ def next_page(driver):
     # === ШАГ 1: Проверяем, есть ли "Вы получили" ===
     print("\n[1/2] 🔎 Поиск надписи 'Вы получили'...")
 
-    wait = WebDriverWait(driver, 15)
+    wait = WebDriverWait(driver, 30)
 
     try:
         score_label = wait.until(EC.presence_of_element_located((
