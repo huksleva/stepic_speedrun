@@ -54,6 +54,7 @@ with webdriver.Chrome(options=options) as driver:
             insert_code_into_editor(driver, answer) # Вставляем ответ в форму
             click_send_button(driver) # Жмём кнопку "Отправить"
 
+
         # Если дошли до конца
         #if is_end(driver):
         #    break

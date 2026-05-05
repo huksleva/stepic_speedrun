@@ -175,7 +175,7 @@ def click_send_button(driver) -> bool:
     except TimeoutException:
         print("⚠️ Кнопка не найдена по классу, пробуем запасной XPath...")
         try:
-            # 2️⃣ Запасной поиск по тексту + классу (игнорирует HTML-комментарии <!-- -->)
+            # Запасной поиск по тексту + классу (игнорирует HTML-комментарии <!-- -->)
             btn = wait.until(EC.element_to_be_clickable((
                 By.XPATH, "//button[contains(@class, 'submit-submission') and contains(., 'Отправить')]"
             )))
