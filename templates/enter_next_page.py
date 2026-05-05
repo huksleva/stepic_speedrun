@@ -5,18 +5,37 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def next_page(driver):
-    """Определяет выполнено ли задание на странице и если так, то переходит на следующую страницу"""
+    """
+    Определяет выполнено ли задание на странице и если так, то переходит на следующую страницу.
+    При успешном переходе на следующую страницу возвращает True, иначе False.
+    """
 
     print("\n" + "=" * 60)
     print("🔍 Функция next_page() запущена")
     print(f"📍 URL: {driver.current_url}")
     print("=" * 60)
 
-    # === ШАГ 1: Проверяем, есть ли "Вы получили" ===
-    print("\n[1/2] 🔎 Поиск надписи 'Вы получили'...")
-
     wait = WebDriverWait(driver, 30)
 
+
+    # === ШАГ 1: Проверяем, есть ли вкладка "Решения" ===
+    # Если вкладка есть, значит м ы на странице с заданием или тестом
+    # Если нет, то на информативной странице и можно переходить дальше
+    print("\n[1/3] 🔎 Поиск вкладки 'Решения'...")
+    solution_label = None
+    try:
+        solution_label = wait.until(EC.presence_of_element_located((
+            By.CSS_SELECTOR, "span[data-tooltip-pos='top-start']"
+        )))
+        print(f"   ✅ Найдено")
+    except TimeoutException:
+        print(f"   ❌ Не найдено")
+
+
+    # === ШАГ 2: Проверяем, есть ли "Вы получили" ===
+    # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
+    print("\n[2/3] 🔎 Поиск надписи 'Вы получили'...")
+    score_label = None
     try:
         score_label = wait.until(EC.presence_of_element_located((
             By.CSS_SELECTOR, "span.score-info__score-label"
@@ -25,33 +44,39 @@ def next_page(driver):
     except TimeoutException:
         print(f"   ❌ Не найдено")
 
-    # === ШАГ 2: Ищем и кликаем "Следующий шаг" ===
-    print("\n[2/2] 🔎 Поиск кнопки 'Следующий шаг'...")
 
-    clicked = False
+    # === ШАГ 3: Ищем кнопку "Следующий шаг" ===
+    print("\n[3/3] 🔎 Поиск кнопки 'Следующий шаг'...")
+    button = None
     # Пробуем найти кнопку или ссылку с текстом "Следующий шаг"
     try:
         print(f"   • Пробуем XPath: //button[contains(., 'Следующий шаг')]")
         button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Следующий шаг')]")))
 
-        # Кликаем
+    except TimeoutException:
+        print(f"   ❌ Не найдено")
+    except Exception as e:
+        print(f"   ⚠️ Ошибка: {type(e).__name__}: {e}")
+
+
+
+    # Если на информативной странице, то кликаем "Следующий шаг"
+    # Или если задание выполнено, то тоже жмём "Следующий шаг"
+    if (solution_label is None) or (score_label is not None):
+        print(f"    Страница информативная или уже с выполненным заданием")
         try:
             button.click()
             print(f"   ✅ Клик выполнен")
         except Exception as e:
             driver.execute_script("arguments[0].click();", button)
             print(f"   ✅ Клик выполнен (через JavaScript)")
-
-        clicked = True
-    except TimeoutException:
-        print(f"   ❌ Не найдено")
-    except Exception as e:
-        print(f"   ⚠️ Ошибка: {type(e).__name__}: {e}")
-
-    if not clicked:
-        print("\n❌ Кнопка 'Следующий шаг' НЕ найдена")
+            print(f"    ⚠️ Ошибка:", e)
+        print("=" * 60 + "\n")
+        return True
+    # Если есть вкладка "Решения" и нет надписи "Вы получили", то мы на странице с нерешённым заданием
+    elif (solution_label is not None) and (score_label is None):
+        return False
     else:
-        print("\n✅ Успешно перешли на следующий шаг!")
+        print("Неизвестная ошибка!!!")
+        exit(0)
 
-    print("=" * 60 + "\n")
-    return clicked
