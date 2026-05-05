@@ -5,7 +5,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import requests
 from dotenv import load_dotenv
-from pprint import pprint
 
 load_dotenv()
 
@@ -99,7 +98,66 @@ def complete_task(task_text) -> str:
     print("Ответ от ИИ:\n", text)
     return text
 
-def insert_text_in_form(driver, text):
-    pass
+
+def insert_code_into_editor(driver, code_text: str) -> bool:
+    """
+    Вставляет код в редактор CodeMirror на Stepik.
+
+    Args:
+        driver: WebDriver экземпляр
+        code_text: Текст кода для вставки
+
+    Returns:
+        bool: True если успешно, False если ошибка
+    """
+    wait = WebDriverWait(driver, 10)
+    try:
+        # === СПОСОБ 1: Через JavaScript (надёжнее для CodeMirror) ===
+        print("📝 Вставляю код в редактор...")
+
+        driver.execute_script("""
+            // Находим редактор CodeMirror
+            var editorElement = document.querySelector('.CodeMirror');
+            if (editorElement && editorElement.CodeMirror) {
+                var editor = editorElement.CodeMirror;
+                // Очищаем и вставляем новый код
+                editor.setValue('');
+                editor.setValue(arguments[0]);
+                // Фокусируемся на редакторе
+                editor.focus();
+                return true;
+            }
+            return false;
+        """, code_text)
+
+        print("✅ Код вставлен через CodeMirror API")
+        return True
+
+    except Exception as e:
+        print(f"⚠️ Не удалось вставить через CodeMirror API: {e}")
+
+        # === СПОСОБ 2: Fallback — ищем textarea ===
+        try:
+            print("🔄 Пробую через textarea...")
+
+            # Ищем textarea редактора
+            textarea = wait.until(EC.presence_of_element_located((
+                By.CSS_SELECTOR, "textarea.CodeMirror-input, textarea.code-area__textarea"
+            )))
+
+            # Очищаем и вставляем
+            textarea.clear()
+            textarea.send_keys(code_text)
+
+            print("✅ Код вставлен через textarea")
+            return True
+
+        except TimeoutException:
+            print("❌ Textarea не найдена")
+            return False
+        except Exception as e2:
+            print(f"❌ Ошибка при вставке через textarea: {e2}")
+            return False
+
 
 
