@@ -2,7 +2,7 @@ from selenium import webdriver
 import os
 from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
-from templates.task import extract_task_text, complete_task, insert_code_into_editor
+from templates.task import extract_task_text, complete_task, insert_code_into_editor, click_send_button
 from templates.bool_fun import is_end
 
 
@@ -52,10 +52,11 @@ with webdriver.Chrome(options=options) as driver:
             task_text = extract_task_text(driver) # Получаем текст задания
             answer = complete_task(task_text) # Получаем ответ от ИИ
             insert_code_into_editor(driver, answer) # Вставляем ответ в форму
+            click_send_button(driver) # Жмём кнопку "Отправить"
 
         # Если дошли до конца
-        if is_end(driver):
-            break
+        #if is_end(driver):
+        #    break
 
     input("⏸️ Нажмите Enter для завершения работы приложения...")
 

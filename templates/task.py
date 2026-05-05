@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import requests
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -98,7 +99,6 @@ def complete_task(task_text) -> str:
     print("Ответ от ИИ:\n", text)
     return text
 
-
 def insert_code_into_editor(driver, code_text: str) -> bool:
     """
     Вставляет код в редактор CodeMirror на Stepik.
@@ -159,5 +159,39 @@ def insert_code_into_editor(driver, code_text: str) -> bool:
             print(f"❌ Ошибка при вставке через textarea: {e2}")
             return False
 
+def click_send_button(driver) -> bool:
+    """
+    Находит и нажимает кнопку 'Отправить' на Stepik.
+    Возвращает True при успехе, False при ошибке.
+    """
+    wait = WebDriverWait(driver, 10)
 
+    try:
+        # Основной поиск по классу (быстро и стабильно)
+        btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))
+        btn.click()
+        print("✅ Кнопка 'Отправить' нажата")
+        return True
+    except TimeoutException:
+        print("⚠️ Кнопка не найдена по классу, пробуем запасной XPath...")
+        try:
+            # 2️⃣ Запасной поиск по тексту + классу (игнорирует HTML-комментарии <!-- -->)
+            btn = wait.until(EC.element_to_be_clickable((
+                By.XPATH, "//button[contains(@class, 'submit-submission') and contains(., 'Отправить')]"
+            )))
+            btn.click()
+            print("✅ Кнопка 'Отправить' нажата (через XPath)")
+            return True
+        except TimeoutException:
+            print("❌ Кнопка 'Отправить' не найдена")
+            return False
+        except Exception as e:
+            # 3️ Если элемент найден, но клик перехватывается другим слоем
+            try:
+                driver.execute_script("arguments[0].click();", btn)
+                print("✅ Клик выполнен через JavaScript")
+                return True
+            except:
+                print(f"❌ Ошибка клика: {e}")
+                return False
 
