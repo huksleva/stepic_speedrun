@@ -77,7 +77,7 @@ def complete_task(task_text) -> str:
         "messages": [
             {
                 "role": "system",
-                "content": "Ты решаешь задачи для Stepik. Выводи ТОЛЬКО код, без пояснений, без markdown."
+                "content": "Ты решаешь задачи для Stepik. Выводи ТОЛЬКО код, без форматирования, без markdown"
             },
             {
                 "role": "user",
@@ -184,13 +184,14 @@ def wait_until_task_done(driver) -> bool:
         return False
 
 
-def click_try_again_button(driver):
+def click_try_again_button(driver) -> bool:
     """Кликает на кнопку попробовать снова, если она есть"""
+    wait = WebDriverWait(driver, 1)
     try:
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.again-btn")))
         btn.click()
         print("✅ Кнопка 'Попробовать снова' нажата")
-        return wait_until_task_done(driver)  # Проверяем правильный ли код отослал ИИ
+        return True
     except TimeoutException:
         print("❌ Кнопка 'Попробовать снова' не найдена")
         return False
@@ -202,7 +203,6 @@ def click_send_button(driver) -> bool:
     Возвращает True при правильном ответе на задание, False при ошибке.
     """
     wait = WebDriverWait(driver, 10)
-    btn = None
     try:
         # Основной поиск по классу (быстро и стабильно)
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))
