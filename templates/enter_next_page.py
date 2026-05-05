@@ -61,8 +61,8 @@ def next_page(driver):
     print("\n[3/4] 🔎 Поиск надписи 'Мои решения'...")
     my_solutions_label = None
     try:
-        my_solutions_label = wait.until(EC.presence_of_element_located((
-            By.CSS_SELECTOR, "span.score-info__score-label"
+        my_solutions_label = wait.until(EC.element_to_be_clickable((
+            By.XPATH, "//a[text()='Мои решения']"
         )))
         print(f"   ✅ Найдено")
     except TimeoutException:
