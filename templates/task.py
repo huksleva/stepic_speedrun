@@ -4,21 +4,102 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import requests
+from dotenv import load_dotenv
 from pprint import pprint
 
-
-# НАСТРОЙКА ПОДКЛЮЧЕНИЯ К ИИ
-url = "https://api.intelligence.io.solutions/api/v1/models?page=1&page_size=50"
-api_key = str(os.getenv("API_KEY"))
-headers = {"Authorization": "Bearer " + api_key}
-response = requests.get(url, headers=headers)
-print(response.text)
+load_dotenv()
 
 
-def get_task(driver):
+def ai_name_list():
+    """Выводит список всех доступных ИИ моделей"""
 
+    ai_url = "https://api.intelligence.io.solutions/api/v1/models?page=1&page_size=50"
+    ai_api_key = str(os.getenv("API_KEY"))
+    ai_headers = {"Authorization": "Bearer " + ai_api_key}
+    ai_response = requests.get(ai_url, headers=ai_headers)
+    ai_data = ai_response.json()
+
+    for i in range(len(ai_data["data"])):
+        ai_name = ai_data["data"][i]["id"]
+        print(ai_name)
+
+
+def extract_task_text(driver) -> str:
+    """
+    Извлекает текст задания из элемента .quiz-layout-head.
+    Возвращает очищенный текст для отправки ИИ
+    """
+    wait = WebDriverWait(driver, 10)
+
+    # Находим элемент с заданием
+    quiz_element = wait.until(EC.presence_of_element_located((
+        By.CSS_SELECTOR, ".quiz-layout-head"
+    )))
+
+    # Способ 1: Получаем через JavaScript (надёжнее для сложного HTML)
+    raw_text = driver.execute_script("""
+        return arguments[0].innerText;
+    """, quiz_element)
+
+    # Способ 2 (альтернатива): quiz_element.text
+    # raw_text = quiz_element.text
+
+    # === ОЧИСТКА ТЕКСТА ===
+
+    # 1. Убираем лишние пробелы в начале/конце строк
+    lines = raw_text.split('\n')
+    cleaned_lines = [line.strip() for line in lines]
+
+    # 2. Убираем пустые строки подряд (оставляем максимум 2 переноса)
+    text = '\n'.join(cleaned_lines)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+
+    # 3. Убираем текст кнопок "Скопировать код" (если остался)
+    text = re.sub(r'Скопировать код', '', text)
+
+    # 4. Убираем лишние пробелы между словами
+    text = re.sub(r'  +', ' ', text)
+
+    # 5. Финальная обрезка
+    text = text.strip()
+
+    return text
+
+def complete_task(task_text) -> str:
+    url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
+    API_KEY = str(os.getenv("API_KEY"))
+    # task_text = "В ответ пиши только код. Задание: Напиши на SQL запрос к БД с названием 'USER' на удаление"
+
+    # Минимальный payload — только нужные поля
+    payload = {
+        "model": "deepseek-ai/DeepSeek-V4-Flash",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Ты решаешь задачи для Stepik. Выводи ТОЛЬКО код, без пояснений, без markdown."
+            },
+            {
+                "role": "user",
+                "content": task_text
+            }
+        ],
+        "temperature": 0.1,  # Меньше = точнее код
+        "max_tokens": 1024,  # Достаточно для большинства задач
+        "stream": False  # Ждём полный ответ
+    }
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    data = response.json()
+
+    text = data['choices'][0]['message']['content']
+    print("Ответ от ИИ:\n", text)
+    return text
+
+def insert_text_in_form(driver, text):
     pass
 
-def complete_task(driver):
-    pass
 

@@ -2,8 +2,13 @@ from selenium import webdriver
 import os
 from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
-from templates.task import get_task, complete_task
+from templates.task import extract_task_text, complete_task, insert_text_in_form
 from templates.bool_fun import is_end
+
+
+
+
+
 
 # === НАСТРОЙКИ ===
 # Ссылка на первую страницу курса Степика
@@ -44,8 +49,9 @@ with webdriver.Chrome(options=options) as driver:
         # Идём до страницы с заданием
         # Если попадаем на страницу с нерешённым заданием
         if not next_page(driver):
-            get_task(driver)
-            complete_task(driver)
+            task_text = extract_task_text(driver) # Получаем текст задания
+            answer = complete_task(task_text) # Получаем ответ от ИИ
+            insert_text_in_form(driver, answer) # Вставляем ответ в форму
 
         # Если дошли до конца
         if is_end(driver):
