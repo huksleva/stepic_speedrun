@@ -1,6 +1,8 @@
 from selenium import webdriver
 import os
+from selenium.webdriver.support.wait import WebDriverWait
 from templates.enter_next_page import next_page
+from templates.wait_fun import wait_for_network_idle
 
 # === НАСТРОЙКИ ===
 # Ссылка на сайт
@@ -37,6 +39,9 @@ with webdriver.Chrome(options=options) as driver:
         print(f"⚠️ Статус загрузки: {ready_state}")
     print(f"📄 Страница: {driver.title}")
     print("\n💡 Войдите в аккаунт вручную — сессия сохранится для следующих запусков!")
+
+    # Ждём, пока загрузятся все элементы страницы
+    wait_for_network_idle(driver)
 
     # Переходим на следующую страницу
     next_page(driver)
