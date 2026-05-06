@@ -7,7 +7,8 @@ from templates.task import (
     insert_code_into_editor,
     click_send_button,
     click_try_again_button,
-    check_answer
+    check_answer,
+    extract_errors_text
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -82,6 +83,7 @@ with webdriver.Chrome(options=options) as driver:
         # Если попадаем на страницу с нерешённым заданием, то решаем его
         if not next_page(driver):
             task_text = extract_task_text(driver)  # Получаем текст задания
+            print(task_text)
             answer = complete_task(task_text) # Получаем ответ от ИИ
             click_try_again_button(driver) # Нажимаем кнопку "Попробовать снова", если она есть
             time.sleep(0.2)
@@ -89,13 +91,24 @@ with webdriver.Chrome(options=options) as driver:
             time.sleep(0.2)
             click_send_button(driver) # Жмём кнопку "Отправить"
 
-            # Проверяем правильно задание выполнено или нет
-            if not check_answer(driver):
-                # Если задание выполнено с ошибкой, то пробуем снова
-                # Весь текст страницы, вместе с блоком ошибок отправится к ИИ
-                print(f"❌   Задание выполнено с ошибкой")
-            else:
-                print(f"✅   Задание выполнено корректно")
+            # Пытаемся решить задание до тех пор, пока не решим правильно
+            for i in range(5):
+                print("\n")
+                if not check_answer(driver):
+                    # Если задание выполнено с ошибкой, то пробуем снова
+                    # Весь текст страницы, вместе с блоком ошибок отправится к ИИ
+                    print(f"❌   Задание выполнено с ошибкой")
+                    print("Попытка решить задание повторно")
+                    task_text = extract_task_text(driver) + "\n\nОшибки:\n" + extract_errors_text(driver)
+                    answer = complete_task(task_text)
+                    click_try_again_button(driver)
+                    time.sleep(0.2)
+                    insert_code_into_editor(driver, answer)
+                    time.sleep(0.2)
+                    click_send_button(driver)
+                else:
+                    print(f"✅   Задание выполнено корректно")
+                    break
 
         # Если дошли до конца
         if is_end(driver):

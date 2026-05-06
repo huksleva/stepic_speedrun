@@ -66,6 +66,61 @@ def extract_task_text(driver) -> str:
     return text
 
 
+def extract_errors_text(driver) -> str:
+    """
+    Извлекает текст с ошибками из элемента .smart-hints.ember-view.lesson__hint.
+    Возвращает очищенный текст для отправки ИИ.
+    """
+    wait = WebDriverWait(driver, 5)  # Короткий тайм-аут: ошибки появляются быстро
+
+    try:
+        # Находим элемент с подсказками об ошибках.
+        # Используем точный селектор по трём классам (без пробелов внутри)
+        hint_element = wait.until(EC.presence_of_element_located((
+            By.CSS_SELECTOR, ".smart-hints.ember-view.lesson__hint"
+        )))
+
+        # Получаем текст через JavaScript (надёжнее для динамического контента)
+        raw_text = driver.execute_script("""
+            return arguments[0].innerText;
+        """, hint_element)
+
+        # === ОЧИСТКА ТЕКСТА ===
+
+        # 1. Убираем лишние пробелы в начале/конце строк
+        lines = raw_text.split('\n')
+        cleaned_lines = [line.strip() for line in lines]
+
+        # 2. Убираем пустые строки подряд (оставляем максимум 2 переноса)
+        text = '\n'.join(cleaned_lines)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+
+        # 3. Убираем служебный текст (кнопки, иконки, подсказки интерфейса)
+        text = re.sub(r'Скопировать код', '', text)
+        text = re.sub(r'💡|⚠️|❌|✅', '', text)  # Убираем эмодзи
+        text = re.sub(r'Подсказка:\s*', '', text)  # Убираем префиксы
+
+        # 4. Убираем лишние пробелы между словами
+        text = re.sub(r'  +', ' ', text)
+
+        # 5. Финальная обрезка
+        text = text.strip()
+
+        if text:
+            print(f"✅ Найдена подсказка об ошибке: {text[:100]}...")
+            return text
+        else:
+            return ""
+
+    except TimeoutException:
+        # Элемент не найден — это нормально, не на всех шагах есть ошибки
+        print("ℹ️ Подсказки об ошибках не найдены")
+        return ""
+    except Exception as e:
+        print(f"⚠️ Ошибка при извлечении подсказки: {e}")
+        return ""
+
+
 def complete_task(task_text) -> str:
     url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
     API_KEY = str(os.getenv("API_KEY"))
@@ -84,7 +139,7 @@ def complete_task(task_text) -> str:
             }
         ],
         "temperature": 0.1,  # Меньше = точнее код
-        "max_tokens": 1024,  # Достаточно для большинства задач
+        "max_tokens": 2048,  # Достаточно для большинства задач
         "stream": False  # Ждём полный ответ
     }
     headers = {
@@ -94,6 +149,7 @@ def complete_task(task_text) -> str:
 
     response = requests.post(url, json=payload, headers=headers)
     data = response.json()
+    print(data)
 
     text = data['choices'][0]['message']['content']
     print("Ответ от ИИ:\n", text)
