@@ -149,9 +149,15 @@ def complete_task(task_text) -> str:
 
     response = requests.post(url, json=payload, headers=headers)
     data = response.json()
-    print(data)
-
     text = data['choices'][0]['message']['content']
+
+    # 1. Убираем открывающий блок (```sql, ```python или просто ```)
+    # Паттерн ищет ``` в начале строки, затем язык (опционально), затем перенос строки
+    text = re.sub(r'^```\w*\n?', '', text, flags=re.MULTILINE)
+
+    # 2. Убираем закрывающий блок (```) в конце
+    text = re.sub(r'\n?```$', '', text, flags=re.MULTILINE)
+
     print("Ответ от ИИ:\n", text)
     return text
 
