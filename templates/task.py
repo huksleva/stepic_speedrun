@@ -139,7 +139,7 @@ def complete_task(task_text) -> str:
             }
         ],
         "temperature": 0.1,  # Меньше = точнее код
-        "max_tokens": 2048,  # Достаточно для большинства задач
+        "max_tokens": 1300,  # Достаточно для большинства задач
         "stream": False  # Ждём полный ответ
     }
     headers = {
@@ -149,6 +149,7 @@ def complete_task(task_text) -> str:
 
     response = requests.post(url, json=payload, headers=headers)
     data = response.json()
+    print(data)
     text = data['choices'][0]['message']['content']
 
     # 1. Убираем открывающий блок (```sql, ```python или просто ```)
