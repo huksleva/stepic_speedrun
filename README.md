@@ -103,7 +103,7 @@ CHROME_PROFILE_PATH=C:\Users\<ВашеИмя>\AppData\Local\Google\Chrome\User D
 
 #### 5. Как получить API_KEY
 
-1. Зайти на сайт [io.net](io.net) и зарегистрируйтесь
+1. Зайти на сайт [io.net](https://io.net) и зарегистрируйтесь
 2. Get started → CLOUD → INTELLIGENCE → API Keys and Secrets → Create New API Key
 3. Вводите название для ключа → Create API Key
 ![img.png](img.png)
