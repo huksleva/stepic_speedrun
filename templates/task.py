@@ -161,7 +161,7 @@ def insert_code_into_editor(driver, code_text: str) -> bool:
             return False
 
 
-def wait_until_task_done(driver) -> bool:
+def check_answer(driver, timeout=10) -> bool:
     """
     Ждёт, пока Степик не проверит задание.
     Returns:
@@ -171,16 +171,38 @@ def wait_until_task_done(driver) -> bool:
     # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
     print("\n🔎 Ожидание ответа компилятора: поиск надписи 'Вы получили'...")
     score_label = None
-    wait = WebDriverWait(driver, 30)
+    wait = WebDriverWait(driver, timeout)
     try:
         score_label = wait.until(EC.presence_of_element_located((
             By.CSS_SELECTOR, "span.score-info__score-label"
         )))
-        print(f"   ✅ Найдено")
-        return True
+        print(f"   ✅ Найдено 'Вы получили'")
     except TimeoutException:
-        print(f"   ❌ Не найдено")
+        print(f"   ❌ Не найдено 'Вы получили'")
+
+
+    # === Проверяем есть ли блок с ошибками ===
+    errors_block = None
+    try:
+        wait = WebDriverWait(driver, timeout)
+        # visibility лучше presence: ждёт, пока элемент станет видимым пользователю
+        errors_block = wait.until(EC.visibility_of_element_located((
+            By.CSS_SELECTOR, ".attempt-message_wrong"
+        )))
+        print(f"   ✅ Найден блок с ошибками")
+    except TimeoutException:
+        print(f"   ❌ Не найден блок с ошибками")
+
+    # Если задание решено правильно
+    if (score_label is not None) and (errors_block is None):
+        print(f"✅    Задание решено верно")
+        return True
+    elif (score_label is None) and (errors_block is not None):
+        print(f"❌   Задание решено неверно")
         return False
+    else:
+        print(f"❌   Неизвестная ошибка")
+        exit(0)
 
 
 def click_try_again_button(driver) -> bool:
@@ -207,7 +229,8 @@ def click_send_button(driver) -> bool:
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))
         btn.click()
         print("✅ Кнопка 'Отправить' нажата")
-        return wait_until_task_done(driver)  # Проверяем правильный ли код отослал ИИ
+        return True
     except TimeoutException:
         print("⚠️ Кнопка не найдена по классу")
         return False
+
