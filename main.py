@@ -28,7 +28,6 @@ url = str(os.environ.get("START_URL"))
 PROFILE_DIR_NAME = "SeleniumProfile"
 NEW_PROFILE_PATH = str(os.environ.get("CHROME_PROFILE_PATH")) + PROFILE_DIR_NAME
 
-
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 options = webdriver.ChromeOptions()
 
@@ -36,8 +35,6 @@ options = webdriver.ChromeOptions()
 options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
 options.add_experimental_option("useAutomationExtension", False)
 options.add_argument("--disable-blink-features=AutomationControlled")
-
-
 
 # 🔥 Если запускаемся в Docker — включаем headless
 if os.environ.get("CHROME_HEADLESS") == "true":
@@ -62,11 +59,6 @@ else:
             print(f"📄 Страница: {driver.title}")
             input("⏸️ После окончания регистрации нажмите Enter, чтобы продолжить\n")
 
-
-
-
-
-
 # Инициализация драйвера (Chrome по умолчанию)
 with webdriver.Chrome(options=options) as driver:
     print("🚀 Запуск Chrome с новым профилем...")
@@ -79,41 +71,27 @@ with webdriver.Chrome(options=options) as driver:
     # Начинаем решать
     is_on_task = True
     while True:
-        # Идём до страницы с заданием
-        # Если попадаем на страницу с нерешённым заданием, то решаем его
+        # Идём до страницы с заданием.
+        # Если попадаем на страницу с нерешённым заданием, то решаем его.
+        # Пытаемся решить задание до тех пор, пока не решим правильно.
         if not next_page(driver):
-            task_text = extract_task_text(driver)  # Получаем текст задания
+            task_text = extract_task_text(driver) + "\n\nОшибки:\n" + extract_errors_text(driver)  # Получаем текст задания
             print(task_text)
-            answer = complete_task(task_text) # Получаем ответ от ИИ
-            click_try_again_button(driver) # Нажимаем кнопку "Попробовать снова", если она есть
+            answer = complete_task(task_text)  # Получаем ответ от ИИ
+            click_try_again_button(driver)  # Нажимаем кнопку "Попробовать снова", если она есть
             time.sleep(0.2)
-            insert_code_into_editor(driver, answer) # Вставляем ответ в форму
+            insert_code_into_editor(driver, answer)  # Вставляем ответ в форму
             time.sleep(0.2)
-            click_send_button(driver) # Жмём кнопку "Отправить"
+            click_send_button(driver)  # Жмём кнопку "Отправить"
 
-            # Пытаемся решить задание до тех пор, пока не решим правильно
-            for i in range(5):
-                print("\n")
-                if not check_answer(driver):
-                    # Если задание выполнено с ошибкой, то пробуем снова
-                    # Весь текст страницы, вместе с блоком ошибок отправится к ИИ
-                    print(f"❌   Задание выполнено с ошибкой")
-                    print("Попытка решить задание повторно")
-                    task_text = extract_task_text(driver) + "\n\nОшибки:\n" + extract_errors_text(driver)
-                    answer = complete_task(task_text)
-                    click_try_again_button(driver)
-                    time.sleep(0.2)
-                    insert_code_into_editor(driver, answer)
-                    time.sleep(0.2)
-                    click_send_button(driver)
-                else:
-                    print(f"✅   Задание выполнено корректно")
-                    break
+            if not check_answer(driver):
+                print(f"\n❌   Задание выполнено с ошибкой")
+            else:
+                print(f"\n✅   Задание выполнено корректно")
+                break
 
         # Если дошли до конца
         if is_end(driver):
             break
 
-    input("⏸️ Нажмите Enter для завершения работы приложения...")
-
-
+input("⏸️ Нажмите Enter для завершения работы приложения...")
