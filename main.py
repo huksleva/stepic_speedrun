@@ -79,16 +79,16 @@ with webdriver.Chrome(options=options) as driver:
             print(task_text)
             answer = complete_task(task_text)  # Получаем ответ от ИИ
             click_try_again_button(driver)  # Нажимаем кнопку "Попробовать снова", если она есть
-            time.sleep(0.2)
+            time.sleep(0.3)
             insert_code_into_editor(driver, answer)  # Вставляем ответ в форму
-            time.sleep(0.2)
+            time.sleep(0.3)
             click_send_button(driver)  # Жмём кнопку "Отправить"
 
             if not check_answer(driver):
                 print(f"\n❌   Задание выполнено с ошибкой")
             else:
                 print(f"\n✅   Задание выполнено корректно")
-                break
+
 
         # Если дошли до конца
         if is_end(driver):
