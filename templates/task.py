@@ -139,7 +139,7 @@ def complete_task(task_text) -> str:
             }
         ],
         "temperature": 0.1,  # Меньше = точнее код
-        "max_tokens": 1300,  # Достаточно для большинства задач
+        "max_tokens": 2048,  # Достаточно для большинства задач
         "stream": False  # Ждём полный ответ
     }
     headers = {
@@ -152,12 +152,15 @@ def complete_task(task_text) -> str:
     print(data)
     text = data['choices'][0]['message']['content']
 
-    # 1. Убираем открывающий блок (```sql, ```python или просто ```)
-    # Паттерн ищет ``` в начале строки, затем язык (опционально), затем перенос строки
-    text = re.sub(r'^```\w*\n?', '', text, flags=re.MULTILINE)
+    try:
+        # 1. Убираем открывающий блок (```sql, ```python или просто ```)
+        # Паттерн ищет ``` в начале строки, затем язык (опционально), затем перенос строки
+        text = re.sub(r'^```\w*\n?', '', text, flags=re.MULTILINE)
 
-    # 2. Убираем закрывающий блок (```) в конце
-    text = re.sub(r'\n?```$', '', text, flags=re.MULTILINE)
+        # 2. Убираем закрывающий блок (```) в конце
+        text = re.sub(r'\n?```$', '', text, flags=re.MULTILINE)
+    except Exception as e:
+        print(f"❌   Ошибка выполнения операций со строками:", e)
 
     print("Ответ от ИИ:\n", text)
     return text
