@@ -70,23 +70,14 @@
 
 ### Способ 1: Локальный запуск (без Docker)
 
-#### 1. Клонируйте или создайте структуру проекта:
-```
-stepic_speedrun/
-├── main.py
-├── templates/
-│   ├── task.py
-│   └── enter_next_page.py
-├── requirements.txt
-├── .env
-└── README.md
-```
+#### 1. Клонируйте репозиторий:
+`git clone https://github.com/huksleva/stepic_speedrun`
 
 #### 2. Создайте виртуальное окружение:
 ```powershell
 # PowerShell (Windows)
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate
 
 # Linux/macOS
 python3 -m venv .venv
@@ -106,13 +97,22 @@ START_URL=https://stepik.org/lesson/XXXXXX/step/1?unit=XXXXXX
 # API-ключ для доступа к ИИ
 API_KEY=io-v2-ваш_ключ_здесь
 
-# (Опционально) Путь к профилю Chrome
-CHROME_PROFILE_PATH=C:\Users\ВашеИмя\AppData\Local\Google\Chrome\User Data\SeleniumProfile
+# Путь к папке с профилями Chrome
+CHROME_PROFILE_PATH=C:\Users\<ВашеИмя>\AppData\Local\Google\Chrome\User Data\
 ```
 
-#### 5. Первая авторизация:
+#### 5. Как получить API_KEY
+
+1. Зайти на сайт [io.net](io.net) и зарегистрируйтесь
+2. Get started → CLOUD → INTELLIGENCE → API Keys and Secrets → Create New API Key
+3. Вводите название для ключа → Create API Key
+![img.png](img.png)
+4. Копируете ваш API_KEY и вставляете его в файл `.env`
+
+
+#### 6. Первая авторизация:
 ```bash
-# Запустите скрипт локально (без headless)
+# Запустите скрипт локально (без Docker)
 python main.py
 ```
 - Откроется браузер — войдите в аккаунт Stepik
@@ -129,34 +129,63 @@ python main.py
 ```dockerfile
 FROM python:3.11-bookworm
 
+# Устанавливаем зависимости для Chrome
 RUN apt-get update && apt-get install -y \
-    wget gnupg ca-certificates curl unzip \
-    libxss1 libappindicator3-1 libnss3 \
-    libglib2.0-0 libx11-6 libxcomposite1 \
-    libxdamage1 libxrandr2 libgbm1 \
-    libxkbcommon0 libgtk-3-0 \
-    fonts-liberation fonts-noto-color-emoji xdg-utils \
+    wget \
+    gnupg \
+    ca-certificates \
+    curl \
+    unzip \
+    libxss1 \
+    libappindicator3-1 \
+    libnss3 \
+    libglib2.0-0 \
+    libx11-6 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libxkbcommon0 \
+    libgtk-3-0 \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# Устанавливаем Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
+# ❌ УДАЛЯЕМ ручную установку ChromeDriver — Selenium Manager сделает это сам!
+
+# Рабочая директория
 WORKDIR /app
+
+# Копируем зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем код
 COPY . .
 
+# Переменные окружения
 ENV CHROME_HEADLESS=true
 ENV PYTHONUNBUFFERED=1
+# Важно для Selenium Manager в Docker:
+ENV SE_MANAGER_LOG_LEVEL=ERROR
 
+# Запуск
 CMD ["python", "main.py"]
 ```
 
 **docker-compose.yml**:
 ```yaml
+# docker-compose.yml
+version: '3.8'
+
 services:
   stepic-bot:
     build: .
@@ -167,12 +196,18 @@ services:
       - API_KEY=${API_KEY}
       - CHROME_HEADLESS=true
     volumes:
-      - ./cookies:/app/cookies
       - .:/app
     stdin_open: true
     tty: true
-    mem_limit: 2g
-    cpus: 1.0
+
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+
+    network_mode: bridge
 ```
 
 #### 2. Создайте папку для cookies:
@@ -203,11 +238,11 @@ docker-compose logs -f
 
 ### Файл `.env` — основные переменные:
 
-| Переменная | Описание | Пример |
-|-----------|----------|--------|
-| `START_URL` | Ссылка на первый шаг курса | `https://stepik.org/lesson/123/step/1` |
-| `API_KEY` | Ключ доступа к ИИ-провайдеру | `io-v2-eyJhbGci...` |
-| `CHROME_HEADLESS` | Запуск браузера без окна | `true` / `false` |
+| Переменная | Описание | Пример                                   |
+|-----------|----------|------------------------------------------|
+| `START_URL` | Ссылка на первый шаг курса | `https://stepik.org/lesson/.../step/...` |
+| `API_KEY` | Ключ доступа к ИИ-провайдеру | `io-v2-eyJhbGci...`                      |
+| `CHROME_HEADLESS` | Запуск браузера без окна | `true` / `false`                         |
 
 ### Настройки ИИ в `templates/task.py`:
 
@@ -235,7 +270,7 @@ payload = {
 ### Локально:
 ```powershell
 # Активация окружения
-.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate
 
 # Запуск
 python main.py
@@ -562,6 +597,3 @@ curl -H "Cookie: $(cat cookies.json)" https://stepik.org/api/stepics/whoami
 
 ---
 
-✅ **Готово!** Теперь у вас есть полный отчёт по проекту. Скопируйте этот текст в файл `README.md` в корне проекта — он будет автоматически отображаться на GitHub/GitLab.
-
-Нужно добавить раздел с примерами использования, скриншотами или видео-демо? Пишите, дополню! 🚀

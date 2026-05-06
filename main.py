@@ -94,4 +94,4 @@ with webdriver.Chrome(options=options) as driver:
         if is_end(driver):
             break
 
-input("⏸️ Нажмите Enter для завершения работы приложения...")
+    input("⏸️ Нажмите Enter для завершения работы приложения...")
