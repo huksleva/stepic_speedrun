@@ -24,10 +24,19 @@ url = str(os.environ.get("START_URL"))
 
 # ⚙️ НАСТРОЙКИ ПРОФИЛЯ
 # Путь к НОВОМУ профилю (создастся автоматически при первом запуске)
-NEW_PROFILE_PATH = r"C:\Users\Leonid\AppData\Local\Google\Chrome\User Data\SeleniumProfile"
+NEW_PROFILE_PATH = str(os.environ.get("CHROME_PROFILE_PATH"))
 options = webdriver.ChromeOptions()
-options.add_argument(f"--user-data-dir={NEW_PROFILE_PATH}")
-# profile-directory не указываем — будет использоваться профиль по умолчанию в этой папке
+# 🔥 Если запускаемся в Docker — включаем headless
+if os.environ.get("CHROME_HEADLESS") == "true":
+    options.add_argument("--headless=new")  # Новый headless режим
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    print("🐳 Запуск в Docker (headless mode)")
+else:
+    # Локальный запуск — используем профиль
+    options.add_argument(f"--user-data-dir={NEW_PROFILE_PATH}")
 
 
 # 🕵️ УЛУЧШЕННОЕ СКРЫТИЕ АВТОМАТИЗАЦИИ

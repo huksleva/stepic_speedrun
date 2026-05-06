@@ -1,0 +1,25 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  stepic-bot:
+    build: .
+    container_name: stepic_speedrun
+    restart: unless-stopped
+    environment:
+      - START_URL=${START_URL}
+      - API_KEY=${API_KEY}
+      - CHROME_HEADLESS=true
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+
+    network_mode: bridge
