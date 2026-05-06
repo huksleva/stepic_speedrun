@@ -6,6 +6,8 @@ import os
 import requests
 import re
 from dotenv import load_dotenv
+from pathlib import Path
+import base64
 
 load_dotenv()
 
@@ -108,7 +110,7 @@ def extract_errors_text(driver) -> str:
 
         if text:
             print(f"✅ Найдена подсказка об ошибке: {text[:100]}...")
-            return text
+            return "\n\nОшибки:\n" + text
         else:
             return ""
 
@@ -121,9 +123,122 @@ def extract_errors_text(driver) -> str:
         return ""
 
 
-def complete_task(task_text) -> str:
+def encode_image_to_base64(image_path="images") -> str:
+    """Кодирует изображение в base64"""
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+
+def extract_all_images(driver, save_dir="images") -> list:
+    """
+    Скачивает все изображения с текущей страницы задания.
+    Возвращает список путей к скачанным файлам.
+    """
+    # Создаём папку для изображений
+    Path(save_dir).mkdir(exist_ok=True)
+
+    image_paths = []
+
+    # Находим все <img> в условии задачи
+    # (исключаем логотипы и иконки)
+    img_elements = driver.find_elements(By.CSS_SELECTOR,
+                                        ".problem-statement img, "
+                                        ".step-text img, "
+                                        ".html-content img, "
+                                        ".rich-text-viewer img"
+                                        )
+
+    print(f"🔍 Найдено {len(img_elements)} изображений")
+
+    for i, img in enumerate(img_elements):
+        try:
+            img_url = img.get_attribute("src")
+
+            # Пропускаем:
+            # - пустые URL
+            # - base64 (уже встроены в страницу)
+            # - иконки и логотипы
+            if not img_url:
+                continue
+            if img_url.startswith(""):
+                continue
+            if "logo" in img_url or "icon" in img_url:
+                continue
+
+            # Скачиваем изображение
+            response = requests.get(img_url, timeout=10)
+            if response.status_code == 200:
+                # Определяем расширение
+                content_type = response.headers.get("content-type", "")
+                if "png" in content_type:
+                    ext = "png"
+                elif "jpeg" in content_type or "jpg" in content_type:
+                    ext = "jpg"
+                elif "gif" in content_type:
+                    ext = "gif"
+                else:
+                    ext = "png"  # по умолчанию
+
+                filename = f"task_image_{i}.{ext}"
+                filepath = os.path.join(save_dir, filename)
+
+                # Сохраняем
+                with open(filepath, "wb") as f:
+                    f.write(response.content)
+
+                image_paths.append(filepath)
+                print(f"📥 Скачано: {filename}")
+
+        except Exception as e:
+            print(f"❌ Ошибка при скачивании изображения: {e}")
+
+    return image_paths
+
+
+def complete_task(task_text: str, image_paths: list = None) -> str:
+    """Получаем ответ от ИИ"""
+
     url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
     API_KEY = str(os.getenv("API_KEY"))
+
+
+    # 🔥 Формируем content: текст + изображения
+    # 1. Добавляем текст
+    content_parts: list[Any] = [{
+        "type": "text",
+        "text": task_text
+    }]
+
+    # 2. Добавляем изображения (если есть)
+    if image_paths:
+        for img_path in image_paths:
+            if os.path.exists(img_path):
+                try:
+                    # Определяем тип изображения
+                    ext = Path(img_path).suffix.lower()
+                    if ext == ".png":
+                        mime_type = "image/png"
+                    elif ext in [".jpg", ".jpeg"]:
+                        mime_type = "image/jpeg"
+                    elif ext == ".gif":
+                        mime_type = "image/gif"
+                    else:
+                        mime_type = "image/png"  # по умолчанию
+
+                    # Кодируем в base64
+                    base64_image = encode_image_to_base64(img_path)
+
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{base64_image}"
+                        }
+                    })
+                    print(f"✅ Добавлено изображение: {img_path}")
+                except Exception as e:
+                    print(f"⚠️ Не удалось добавить {img_path}: {e}")
+            else:
+                print(f"⚠️ Файл не найден: {img_path}")
 
     # Минимальный payload — только нужные поля
     payload = {
@@ -135,7 +250,7 @@ def complete_task(task_text) -> str:
             },
             {
                 "role": "user",
-                "content": task_text
+                "content": content_parts
             }
         ],
         "temperature": 0.1,  # Меньше = точнее код

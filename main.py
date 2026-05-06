@@ -8,7 +8,8 @@ from templates.task import (
     click_send_button,
     click_try_again_button,
     check_answer,
-    extract_errors_text
+    extract_errors_text,
+    extract_all_images
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -76,14 +77,22 @@ with webdriver.Chrome(options=options) as driver:
         # Если попадаем на страницу с нерешённым заданием, то решаем его.
         # Пытаемся решить задание до тех пор, пока не решим правильно.
         if not next_page(driver):
-            task_text = extract_task_text(driver) + "\n\nОшибки:\n" + extract_errors_text(driver)  # Получаем текст задания
+            # Текст
+            task_text = extract_task_text(driver) + extract_errors_text(driver)
             print(task_text)
-            answer = complete_task(task_text)  # Получаем ответ от ИИ
-            click_try_again_button(driver)  # Нажимаем кнопку "Попробовать снова", если она есть
+
+            # Изображения
+            imgs = extract_all_images(driver)
+
+            # Отправляем текст и изображения
+            answer = complete_task(task_text, imgs)
+
+            # Остальная логика
+            click_try_again_button(driver)
             time.sleep(0.3)
-            insert_code_into_editor(driver, answer)  # Вставляем ответ в форму
+            insert_code_into_editor(driver, answer)
             time.sleep(0.3)
-            click_send_button(driver)  # Жмём кнопку "Отправить"
+            click_send_button(driver)
 
             if not check_answer(driver):
                 print(f"\n❌   Задание выполнено с ошибкой")
