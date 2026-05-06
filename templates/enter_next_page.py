@@ -25,14 +25,13 @@ def next_page(driver):
     except TimeoutException:
         print("❌ Страница не загрузилась")
 
-
-
+    # Снижаем время задержки
     wait = WebDriverWait(driver, 1)
 
     # === ШАГ 1: Проверяем, есть ли вкладка "Решения" ===
     # Если вкладка есть, значит м ы на странице с заданием или тестом
     # Если нет, то на информативной странице и можно переходить дальше
-    print("\n[1/3] 🔎 Поиск вкладки 'Решения'...")
+    print("\n[1/5] 🔎 Поиск вкладки 'Решения'...")
     solution_label = None
     try:
         solution_label = wait.until(EC.presence_of_element_located((
@@ -45,7 +44,7 @@ def next_page(driver):
 
     # === ШАГ 2: Проверяем, есть ли "Вы получили" ===
     # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
-    print("\n[2/3] 🔎 Поиск надписи 'Вы получили'...")
+    print("\n[2/5] 🔎 Поиск надписи 'Вы получили'...")
     score_label = None
     try:
         score_label = wait.until(EC.presence_of_element_located((
@@ -55,10 +54,23 @@ def next_page(driver):
     except TimeoutException:
         print(f"   ❌ Не найдено")
 
-    """
-    # === ШАГ 3: Проверяем, есть ли "Мои решения" ===
+
+    # === ШАГ 3: Проверяем, есть ли "Баллы не начисляются за эту задачу" ===
     # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
-    print("\n[3/4] 🔎 Поиск надписи 'Мои решения'...")
+    print("\n[3/5] 🔎 Поиск надписи 'Баллы не начисляются за эту задачу'...")
+    score_not_available = None
+    try:
+        score_not_available = wait.until(EC.presence_of_element_located((
+            By.CSS_SELECTOR, ".score-info.attempt__score-info"
+        )))
+        print(f"   ✅ Найдено")
+    except TimeoutException:
+        print(f"   ❌ Не найдено")
+
+
+    # === ШАГ 4: Проверяем, есть ли "Мои решения" ===
+    # Если надпись есть, значит мы на странице с выполненным заданием и можно переходить на следующую страницу
+    print("\n[4/5] 🔎 Поиск надписи 'Мои решения'...")
     my_solutions_label = None
     try:
         my_solutions_label = wait.until(EC.element_to_be_clickable((
@@ -67,16 +79,15 @@ def next_page(driver):
         print(f"   ✅ Найдено")
     except TimeoutException:
         print(f"   ❌ Не найдено")
-    """
 
-    # === ШАГ 4: Ищем кнопку "Следующий шаг" ===
-    print("\n[3/3] 🔎 Поиск кнопки 'Следующий шаг'...")
+
+    # === ШАГ 5: Ищем кнопку "Следующий шаг" ===
+    print("\n[5/5] 🔎 Поиск кнопки 'Следующий шаг'...")
     button = None
     # Пробуем найти кнопку или ссылку с текстом "Следующий шаг"
     try:
         print(f"   • Пробуем XPath: //button[contains(., 'Следующий шаг')]")
         button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Следующий шаг')]")))
-
     except TimeoutException:
         print(f"   ❌ Не найдено")
     except Exception as e:
@@ -86,8 +97,9 @@ def next_page(driver):
 
     # Если на информативной странице, то кликаем "Следующий шаг"
     # Или если задание выполнено, то тоже жмём "Следующий шаг"
-    if (solution_label is None) or (score_label is not None):
-        print(f"    Страница информативная или уже с выполненным заданием")
+    # Если находимся на странице с выполненным заданием без оценки, так как есть "Мои решения" и "Баллы не начисляются за эту задачу"
+    if (solution_label is None) or (score_label is not None) or ((score_not_available is not None) and (my_solutions_label is not None)):
+        print(f"    Страница информативная или уже с выполненным заданием или с заданием без оценки")
         try:
             button.click()
             print(f"   ✅ Клик выполнен")

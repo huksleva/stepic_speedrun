@@ -62,6 +62,7 @@ else:
 # Инициализация драйвера (Chrome по умолчанию)
 with webdriver.Chrome(options=options) as driver:
     print("🚀 Запуск Chrome с новым профилем...")
+    print("📄 ТЕСТЫ на степике нужно проходить в ручном режиме")
     print(f"📂 Путь к профилю: {NEW_PROFILE_PATH}")
 
     # Переход на страницу (блокирует до полной загрузки)
