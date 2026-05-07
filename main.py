@@ -9,7 +9,8 @@ from templates.task import (
     click_try_again_button,
     check_answer,
     extract_errors_text,
-    extract_all_images
+    extract_all_images,
+    show_system_alert
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -72,8 +73,14 @@ with webdriver.Chrome(options=options) as driver:
     print(f"📄 Страница: {driver.title}")
 
     # Начинаем решать
-    is_on_task = True
+    err_count = 0 # Счётчик неправильных ответов на одно задание
     while True:
+        # Если неправильных ответов больше 5, то
+        # рекомендуется решить задание вручную
+        if err_count > 4:
+            show_system_alert("Ошибка ИИ", "На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
+            exit(0)
+
         # Идём до страницы с заданием.
         # Если попадаем на страницу с нерешённым заданием, то решаем его.
         # Пытаемся решить задание до тех пор, пока не решим правильно.
@@ -101,8 +108,10 @@ with webdriver.Chrome(options=options) as driver:
 
             if not check_answer(driver):
                 print(f"\n❌   Задание выполнено с ошибкой")
+                err_count += 1
             else:
                 print(f"\n✅   Задание выполнено корректно")
+                err_count = 0
 
 
         # Если дошли до конца
