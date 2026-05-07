@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import requests
+import tkinter as tk
+from tkinter import messagebox
 import re
 from dotenv import load_dotenv
 from pathlib import Path
@@ -231,6 +233,48 @@ def extract_all_images(driver, save_dir="images") -> list:
     return image_paths
 
 
+def show_system_alert(title: str, message: str):
+    """Выводит окно ошибки и гарантированно переводит на него фокус"""
+
+    root = tk.Tk()
+    root.withdraw()  # Скрываем невидимое главное окно
+    root.attributes('-topmost', True)  # 🔑 Поднимаем на передний план
+    root.lift()  # Дополнительно поднимаем окно
+
+    messagebox.showerror(title, message)  # Блокирует выполнение до нажатия OK
+
+    root.attributes('-topmost', False)  # Возвращаем обычный режим
+    root.destroy()
+
+
+def check_api_response(data: dict) -> bool:
+    """
+    Проверяет ответ API:
+    - Если есть content → возвращает True
+    - Если есть detail → выводит ошибку и возвращает False
+    """
+    try:
+        # Безопасно извлекаем вложенное значение
+        content = data['choices'][0]['message']['content']
+        if content:  # Проверяем, что не None и не пустая строка
+            return True
+    except (KeyError, IndexError, TypeError):
+        # Структура не совпадает или поле отсутствует
+        pass
+
+    # Проверяем наличие ошибки в поле 'detail'
+    detail = data.get('detail')
+    if detail:
+        print(f"⚠️ Ошибка API: {detail}")
+        detail_str = str(data.get('detail') or '').strip()
+        show_system_alert("Ошибка ИИ", detail_str)
+        return False
+
+    # Если ничего не найдено
+    print("❓ Неизвестный формат ответа от API")
+    return False
+
+
 def complete_task(task_text: str, image_paths: list = None) -> str:
     """Получаем ответ от ИИ"""
 
@@ -300,6 +344,11 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
 
     response = requests.post(url, json=payload, headers=headers)
     data = response.json()
+
+    # Проверяем корректность ответа от ИИ
+    if not check_api_response(data):
+        exit(0)
+
     print(data)
     text = data['choices'][0]['message']['content']
 
