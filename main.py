@@ -99,7 +99,6 @@ with webdriver.Chrome(options=options) as driver:
             answer = complete_task(task_text, imgs)
 
             # Остальная логика
-            # ДОПИСАТЬ ПОИСК И НАЖАТИЕ НА КНОПКУ "ПОКАЗАТЬ ПОЛНОСТЬЮ"
             click_try_again_button(driver)
             time.sleep(uniform(0.11, 0.21)) # Рандомизация задержки для усложнения отслеживания программы сайтом
             insert_code_into_editor(driver, answer)

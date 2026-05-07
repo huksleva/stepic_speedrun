@@ -62,44 +62,24 @@ def click_show_full_label_element(driver, timeout=0.2):
 
 def extract_task_text(driver) -> str:
     """
-    Извлекает текст задания из элемента .quiz-layout-head.
-    Возвращает очищенный текст для отправки ИИ
+    Извлекает текст задания из элемента .quiz-layout-head, то есть со всей страницы.
+    Возвращает текст для отправки ИИ
     """
     wait = WebDriverWait(driver, 10)
 
-    # Находим элемент с заданием
+
+    # ".quiz-layout-head" - элемент с заданием
+    # Находим весь текст на странице
     quiz_element = wait.until(EC.presence_of_element_located((
         By.CSS_SELECTOR, ".quiz-layout-head"
     )))
 
-    # Способ 1: Получаем через JavaScript (надёжнее для сложного HTML)
+    # Получаем через JavaScript (надёжнее для сложного HTML)
     raw_text = driver.execute_script("""
         return arguments[0].innerText;
     """, quiz_element)
 
-    # Способ 2 (альтернатива): quiz_element.text
-    # raw_text = quiz_element.text
-
-    # === ОЧИСТКА ТЕКСТА ===
-
-    # 1. Убираем лишние пробелы в начале/конце строк
-    lines = raw_text.split('\n')
-    cleaned_lines = [line.strip() for line in lines]
-
-    # 2. Убираем пустые строки подряд (оставляем максимум 2 переноса)
-    text = '\n'.join(cleaned_lines)
-    text = re.sub(r'\n{3,}', '\n\n', text)
-
-    # 3. Убираем текст кнопок "Скопировать код" (если остался)
-    text = re.sub(r'Скопировать код', '', text)
-
-    # 4. Убираем лишние пробелы между словами
-    text = re.sub(r'  +', ' ', text)
-
-    # 5. Финальная обрезка
-    text = text.strip()
-
-    return text
+    return raw_text
 
 
 def extract_errors_text(driver, timeout=1) -> str:
@@ -313,7 +293,7 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
             }
         ],
         "temperature": 0.1,  # Меньше = точнее код
-        "max_tokens": 2048,  # Достаточно для большинства задач
+        "max_tokens": 2048,  # 1024 - норма (подходит для большинства задач), 2048 - много, но терпимо, >2048 не рекомендуется
         "stream": False  # Ждём полный ответ
     }
     headers = {
