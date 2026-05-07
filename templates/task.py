@@ -250,7 +250,7 @@ def check_api_response(data: dict) -> bool:
         return False
 
     # Если ничего не найдено
-    print("❓ Неизвестный формат ответа от API")
+    print("❓ Неизвестный формат ответа от API. Попробуйте увеличить max_tokens")
     return False
 
 
