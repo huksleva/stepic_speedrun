@@ -9,8 +9,7 @@ from templates.task import (
     click_try_again_button,
     check_answer,
     extract_errors_text,
-    extract_all_images,
-    click_show_full_label_element
+    extract_all_images
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -102,8 +101,6 @@ with webdriver.Chrome(options=options) as driver:
 
             if not check_answer(driver):
                 print(f"\n❌   Задание выполнено с ошибкой")
-                # Раскрываем блок кода с ошибками
-                click_show_full_label_element(driver)
             else:
                 print(f"\n✅   Задание выполнено корректно")
 
