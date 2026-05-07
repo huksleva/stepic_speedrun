@@ -415,3 +415,38 @@ def click_send_button(driver) -> bool:
         print("⚠️ Кнопка не найдена по классу")
         return False
 
+
+def show_full_label_element(driver, timeout=0.2):
+    """Ждёт надпись 'Показать полностью' и возвращает её"""
+
+    wait = WebDriverWait(driver, timeout)
+    print("\n🔎 Поиск надписи 'Показать полностью'...")
+    show_full_label = None
+    try:
+        show_full_label = wait.until(EC.element_to_be_clickable((
+            By.XPATH, "//a[text()='Показать полностью']"
+        )))
+        print(f"   ✅ Найдено")
+    except TimeoutException:
+        print(f"   ❌ Не найдено")
+    finally:
+        return show_full_label
+
+
+def click_show_full_label_element(driver, timeout=0.2):
+    """Раскрывает блок кода с ошибками, чтобы в дальнейшем можно было передать этот текст ИИ"""
+
+    # Получаем надпись-кнопку
+    show_full_label = show_full_label_element(driver, timeout)
+    # Если есть такая надпись-кнопка, то жмём на неё
+    if show_full_label is not None:
+        try:
+            show_full_label.click()
+            print(f"   ✅ Клик выполнен, блок кода с ошибками раскрыт")
+        except Exception as e:
+            driver.execute_script("arguments[0].click();", next_button)
+            print(f"   ✅ Клик выполнен (через JavaScript)")
+            print(f"    ⚠️ Ошибка:", e)
+        print("=" * 60 + "\n")
+
+

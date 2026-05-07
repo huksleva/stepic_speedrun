@@ -9,13 +9,15 @@ from templates.task import (
     click_try_again_button,
     check_answer,
     extract_errors_text,
-    extract_all_images
+    extract_all_images,
+    click_show_full_label_element
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
 from dotenv import load_dotenv
 from pathlib import Path
 import time
+from random import uniform
 
 load_dotenv()
 
@@ -63,7 +65,7 @@ else:
 # Инициализация драйвера (Chrome по умолчанию)
 with webdriver.Chrome(options=options) as driver:
     print("🚀 Запуск Chrome с новым профилем...")
-    print("📄 ТЕСТЫ на степике нужно проходить в ручном режиме")
+    print("📄 ТЕСТЫ на Cтепике нужно проходить в ручном режиме")
     print(f"📂 Путь к профилю: {NEW_PROFILE_PATH}")
 
     # Переход на страницу (блокирует до полной загрузки)
@@ -78,30 +80,38 @@ with webdriver.Chrome(options=options) as driver:
         # Пытаемся решить задание до тех пор, пока не решим правильно.
         if not next_page(driver):
             # Текст
+            print("ИЗВЛЕЧЕНИЕ ИНФОРМАЦИИ СО СТРАНИЦЫ")
             task_text = extract_task_text(driver) + extract_errors_text(driver)
-            print(task_text)
+            # print(task_text)
 
             # Изображения
+            print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
             imgs = extract_all_images(driver)
 
             # Отправляем текст и изображения
+            print("ОТПРАВКА ТЕКСТА И ИЗОБРАЖЕНИЙ ИИ")
             answer = complete_task(task_text, imgs)
 
             # Остальная логика
+            # ДОПИСАТЬ ПОИСК И НАЖАТИЕ НА КНОПКУ "ПОКАЗАТЬ ПОЛНОСТЬЮ"
             click_try_again_button(driver)
-            time.sleep(0.3)
+            time.sleep(uniform(0.11, 0.21)) # Рандомизация задержки для усложнения отслеживания программы сайтом
             insert_code_into_editor(driver, answer)
-            time.sleep(0.3)
+            time.sleep(uniform(0.11, 0.21))
             click_send_button(driver)
 
             if not check_answer(driver):
                 print(f"\n❌   Задание выполнено с ошибкой")
+                # Раскрываем блок кода с ошибками
+                click_show_full_label_element(driver)
             else:
                 print(f"\n✅   Задание выполнено корректно")
 
 
         # Если дошли до конца
+        print("ПРОВЕРКА КОНЕЦ ИЛИ НЕТ")
         if is_end(driver):
             break
+        print("ПРОВЕРКА ЗАВЕРШЕНА")
 
     input("⏸️ Нажмите Enter для завершения работы приложения...")
