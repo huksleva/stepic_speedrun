@@ -81,7 +81,7 @@ with webdriver.Chrome(options=options) as driver:
             # Текст
             print("ИЗВЛЕЧЕНИЕ ИНФОРМАЦИИ СО СТРАНИЦЫ")
             task_text = extract_task_text(driver) + extract_errors_text(driver)
-            # print(task_text)
+            print(task_text)
 
             # Изображения
             print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")

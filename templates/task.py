@@ -125,30 +125,9 @@ def extract_errors_text(driver, timeout=1) -> str:
             return arguments[0].innerText;
         """, hint_element)
 
-        # === ОЧИСТКА ТЕКСТА ===
-
-        # 1. Убираем лишние пробелы в начале/конце строк
-        lines = raw_text.split('\n')
-        cleaned_lines = [line.strip() for line in lines]
-
-        # 2. Убираем пустые строки подряд (оставляем максимум 2 переноса)
-        text = '\n'.join(cleaned_lines)
-        text = re.sub(r'\n{3,}', '\n\n', text)
-
-        # 3. Убираем служебный текст (кнопки, иконки, подсказки интерфейса)
-        text = re.sub(r'Скопировать код', '', text)
-        text = re.sub(r'💡|⚠️|❌|✅', '', text)  # Убираем эмодзи
-        text = re.sub(r'Подсказка:\s*', '', text)  # Убираем префиксы
-
-        # 4. Убираем лишние пробелы между словами
-        text = re.sub(r'  +', ' ', text)
-
-        # 5. Финальная обрезка
-        text = text.strip()
-
-        if text:
-            print(f"✅ Найдена подсказка об ошибке: {text[:100]}...")
-            return "\n\nОшибки:\n" + text
+        if raw_text:
+            print(f"✅ Найдена подсказка об ошибке")
+            return "\n\nОшибки:\n" + raw_text
         else:
             return ""
 
