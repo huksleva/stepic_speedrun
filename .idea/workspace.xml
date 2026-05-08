@@ -121,14 +121,6 @@
       <option name="presentableId" value="Default" />
       <updated>1777881301547</updated>
     </task>
-    <task id="LOCAL-00002" summary="First commit">
-      <option name="closed" value="true" />
-      <created>1777882295145</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1777882295145</updated>
-    </task>
     <task id="LOCAL-00003" summary="123">
       <option name="closed" value="true" />
       <created>1777934410826</created>
@@ -513,7 +505,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778241805745</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="123">
+      <option name="closed" value="true" />
+      <created>1778272085316</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1778272085316</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

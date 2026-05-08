@@ -300,7 +300,7 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
 
     # Минимальный payload — только нужные поля
     payload = {
-        "model": "deepseek-ai/DeepSeek-V4-Pro",
+        "model": "Qwen/Qwen2.5-VL-32B-Instruct",
         "messages": [
             {
                 "role": "system",
@@ -320,7 +320,7 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
         "Content-Type": "application/json"
     }
 
-    response = requests.post(url, json=payload, headers=headers, timeout=(10, 60))
+    response = requests.post(url, json=payload, headers=headers, timeout=(10, 120))
     data = response.json()
 
     # Проверяем корректность ответа от ИИ
