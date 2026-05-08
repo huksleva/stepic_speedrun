@@ -79,11 +79,13 @@ with (webdriver.Chrome(options=options) as driver):
         # Если неправильных ответов больше 5, то
         # рекомендуется решить задание вручную
         if err_count > 4:
-            print("На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
-            nexr_btn = next_button_element(driver)
-            nexr_btn.click()
-            err_count = 0
-            print("Переход на следующую страницу")
+            show_system_alert("Ошибка ИИ", "На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
+            exit(0)
+            #print("На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
+            #nexr_btn = next_button_element(driver)
+            #nexr_btn.click()
+            #err_count = 0
+            #print("Переход на следующую страницу")
 
 
         # Идём до страницы с заданием.
