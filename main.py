@@ -10,6 +10,7 @@ from templates.task import (
     check_answer,
     extract_errors_text,
     extract_all_images,
+    extract_comments_text,
     show_system_alert
 )
 from templates.clean import kill_all_chrome
@@ -87,7 +88,7 @@ with webdriver.Chrome(options=options) as driver:
         if not next_page(driver):
             # Текст
             print("ИЗВЛЕЧЕНИЕ ИНФОРМАЦИИ СО СТРАНИЦЫ")
-            task_text = extract_task_text(driver) + extract_errors_text(driver)
+            task_text = extract_task_text(driver) + extract_errors_text(driver) + extract_comments_text(driver)
             print(task_text)
 
             # Изображения

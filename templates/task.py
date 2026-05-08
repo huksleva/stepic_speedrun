@@ -60,15 +60,34 @@ def click_show_full_label_element(driver, timeout=0.2):
         print("=" * 60 + "\n")
 
 
+def extract_comments_text(driver, timeout=0.2):
+    """
+    Извлекает и возвращает текст комментариев из элемента .discussions-list ember-view
+    """
+    wait = WebDriverWait(driver, timeout)
+
+    # Находим текст комментариев на странице
+    quiz_element = wait.until(EC.presence_of_element_located((
+        By.CSS_SELECTOR, ".discussions-list.ember-view"
+    )))
+
+    # Получаем через JavaScript (надёжнее для сложного HTML)
+    raw_text = driver.execute_script("""
+            return arguments[0].innerText;
+        """, quiz_element)
+
+    return raw_text
+
+
 def extract_task_text(driver) -> str:
     """
-    Извлекает текст задания из элемента .quiz-layout-head, то есть со всей страницы.
+    Извлекает текст задания из элемента .quiz-layout-head.
     Возвращает текст для отправки ИИ
     """
     wait = WebDriverWait(driver, 10)
 
 
-    # ".quiz-layout-head" - элемент с заданием
+    # ".quiz-layout-head" - элемент с заданием.
     # Находим весь текст на странице
     quiz_element = wait.until(EC.presence_of_element_located((
         By.CSS_SELECTOR, ".quiz-layout-head"
