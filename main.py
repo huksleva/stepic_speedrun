@@ -1,6 +1,6 @@
 from selenium import webdriver
 import os
-from templates.enter_next_page import next_page
+from templates.enter_next_page import next_page, next_button_element
 from templates.task import (
     extract_task_text,
     complete_task,
@@ -64,7 +64,7 @@ else:
             input("⏸️ После окончания регистрации нажмите Enter, чтобы продолжить\n")
 
 # Инициализация драйвера (Chrome по умолчанию)
-with webdriver.Chrome(options=options) as driver:
+with (webdriver.Chrome(options=options) as driver):
     print("🚀 Запуск Chrome с новым профилем...")
     print("📄 ТЕСТЫ на Cтепике нужно проходить в ручном режиме")
     print(f"📂 Путь к профилю: {NEW_PROFILE_PATH}")
@@ -79,8 +79,11 @@ with webdriver.Chrome(options=options) as driver:
         # Если неправильных ответов больше 5, то
         # рекомендуется решить задание вручную
         if err_count > 4:
-            show_system_alert("Ошибка ИИ", "На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
-            exit(0)
+            print("На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
+            nexr_btn = next_button_element(driver)
+            nexr_btn.click()
+            print("Переход на следующую страницу")
+
 
         # Идём до страницы с заданием.
         # Если попадаем на страницу с нерешённым заданием, то решаем его.
@@ -88,7 +91,8 @@ with webdriver.Chrome(options=options) as driver:
         if not next_page(driver):
             # Текст
             print("ИЗВЛЕЧЕНИЕ ИНФОРМАЦИИ СО СТРАНИЦЫ")
-            task_text = extract_task_text(driver) + extract_errors_text(driver) + extract_comments_text(driver)
+            task_text = extract_task_text(driver) + extract_errors_text(driver)
+            # extract_comments_text(driver)
             print(task_text)
 
             # Изображения
@@ -117,6 +121,7 @@ with webdriver.Chrome(options=options) as driver:
         # Если дошли до конца
         print("ПРОВЕРКА КОНЕЦ ИЛИ НЕТ")
         if is_end(driver):
+            print("✅✅✅Программа прошла весь курс до конца✅✅✅")
             break
         print("ПРОВЕРКА ЗАВЕРШЕНА")
 
