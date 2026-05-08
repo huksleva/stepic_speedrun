@@ -38,8 +38,6 @@ def kill_all_chrome():
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             print("✅ Все процессы Chrome завершены")
-        else:
-            print(f"ℹ️ Chrome не запущен или уже закрыт")
     except Exception as e:
         print(f"❌ Ошибка: {e}")
 
