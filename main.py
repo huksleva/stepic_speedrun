@@ -82,6 +82,7 @@ with (webdriver.Chrome(options=options) as driver):
             print("На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
             nexr_btn = next_button_element(driver)
             nexr_btn.click()
+            err_count = 0
             print("Переход на следующую страницу")
 
 
