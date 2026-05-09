@@ -6,6 +6,7 @@ import os
 import requests
 import tkinter as tk
 from tkinter import messagebox
+import threading
 import re
 from dotenv import load_dotenv
 from pathlib import Path
@@ -54,7 +55,7 @@ def click_show_full_label_element(driver, timeout=0.2):
             show_full_label.click()
             print(f"   ✅ Клик выполнен, блок кода с ошибками раскрыт")
         except Exception as e:
-            driver.execute_script("arguments[0].click();", next_button)
+            driver.execute_script("arguments[0].click();", show_full_label)
             print(f"   ✅ Клик выполнен (через JavaScript)")
             print(f"    ⚠️ Ошибка:", e)
         print("=" * 60 + "\n")
@@ -76,15 +77,18 @@ def extract_comments_text(driver, timeout=0.2):
             return arguments[0].innerText;
         """, quiz_element)
 
+    # Прокручиваем страницу вверх, чтобы не было ошибок
+    driver.execute_script("window.scrollTo(0, 0);")
+
     return raw_text
 
 
-def extract_task_text(driver) -> str:
+def extract_task_text(driver, timeout=10) -> str:
     """
     Извлекает текст задания из элемента .quiz-layout-head.
     Возвращает текст для отправки ИИ
     """
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, timeout)
 
 
     # ".quiz-layout-head" - элемент с заданием.
@@ -211,6 +215,32 @@ def extract_all_images(driver, save_dir="images") -> list:
     return image_paths
 
 
+def _show_alert_thread(title: str, message: str):
+    """Внутренняя функция для потока"""
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)
+    root.lift()
+
+    # Показываем окно
+    messagebox.showerror(title, message)
+
+    # Очищаем ресурсы
+    root.attributes('-topmost', False)
+    root.destroy()
+
+
+def show_system_alert_nonblocking(title: str, message: str):
+    """Запускает окно ошибки в отдельном потоке (не блокирует основной код)"""
+    thread = threading.Thread(
+        target=_show_alert_thread,
+        args=(title, message),
+        daemon=True  # Поток завершится автоматически при выходе из программы
+    )
+    thread.start()
+    # Возвращаемся сразу, не ждём thread.join()
+
+
 def show_system_alert(title: str, message: str):
     """Выводит окно ошибки и гарантированно переводит на него фокус"""
 
@@ -327,8 +357,8 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
     if not check_api_response(data):
         exit(0)
 
-    print(data)
     text = data['choices'][0]['message']['content']
+    #print(text)
 
     try:
         # 1. Убираем открывающий блок (```sql, ```python или просто ```)
@@ -344,18 +374,22 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
     return text
 
 
-def insert_code_into_editor(driver, code_text: str) -> bool:
+def insert_code_into_editor(driver, code_text: str, timeout=10) -> bool:
     """
     Вставляет код в редактор CodeMirror на Stepik.
 
     Args:
         driver: WebDriver экземпляр
         code_text: Текст кода для вставки
+        driver: драйвер
+        code_text: текст
+        timeout: Тайм-аут
 
     Returns:
         bool: True если успешно, False если ошибка
+
     """
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, timeout)
     try:
         # === СПОСОБ 1: Через JavaScript (надёжнее для CodeMirror) ===
         print("📝 Вставляю код в редактор...")
@@ -449,9 +483,9 @@ def check_answer(driver, timeout=10) -> bool:
         exit(0)
 
 
-def click_try_again_button(driver) -> bool:
+def click_try_again_button(driver, timeout=10) -> bool:
     """Кликает на кнопку попробовать снова, если она есть"""
-    wait = WebDriverWait(driver, 1)
+    wait = WebDriverWait(driver, timeout)
     try:
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.again-btn")))
         btn.click()
@@ -462,12 +496,12 @@ def click_try_again_button(driver) -> bool:
         return False
 
 
-def click_send_button(driver) -> bool:
+def click_send_button(driver, timeout=10) -> bool:
     """
     Находит и нажимает кнопку 'Отправить' на Stepik.
     Возвращает True при правильном ответе на задание, False при ошибке.
     """
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, timeout)
     try:
         # Основной поиск по классу (быстро и стабильно)
         btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.submit-submission")))

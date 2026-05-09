@@ -11,7 +11,8 @@ from templates.task import (
     extract_errors_text,
     extract_all_images,
     extract_comments_text,
-    show_system_alert
+    show_system_alert,
+    show_system_alert_nonblocking
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -79,13 +80,13 @@ with (webdriver.Chrome(options=options) as driver):
         # Если неправильных ответов больше 5, то
         # рекомендуется решить задание вручную
         if err_count > 4:
-            show_system_alert("Ошибка ИИ", "На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
-            exit(0)
-            #print("На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
-            #nexr_btn = next_button_element(driver)
-            #nexr_btn.click()
-            #err_count = 0
-            #print("Переход на следующую страницу")
+            # show_system_alert("Ошибка ИИ", "На это задание потрачено >5 попыток. Рекомендуется решить вручную.")
+            # exit(0)
+            print("На это задание потрачено уже 5 попыток. Рекомендуется решить вручную.")
+            next_btn = next_button_element(driver)
+            next_btn.click()
+            err_count = 0
+            print("Переход к следующему заданию")
 
 
         # Идём до страницы с заданием.
@@ -94,9 +95,14 @@ with (webdriver.Chrome(options=options) as driver):
         if not next_page(driver):
             # Текст
             print("ИЗВЛЕЧЕНИЕ ИНФОРМАЦИИ СО СТРАНИЦЫ")
-            task_text = extract_task_text(driver) + extract_errors_text(driver)
-            # extract_comments_text(driver)
-            print(task_text)
+            # Если пытаемся решить задание 1-й раз
+            if err_count == 0:
+                task_text = extract_task_text(driver) + extract_errors_text(driver)
+                task_text += extract_comments_text(driver)[:1000]  # Ограничение по кол-ву символов для комментариев
+            # Если пытаемся уже не в первый раз
+            else:
+                task_text = extract_errors_text(driver) + extract_comments_text(driver)[:10000]
+            #print(task_text)
 
             # Изображения
             print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
