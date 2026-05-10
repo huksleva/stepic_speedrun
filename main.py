@@ -8,7 +8,6 @@ from templates.task import (
     click_try_again_button,
     check_answer,
     extract_errors_text,
-    extract_all_images,
     extract_comments_text,
     complete_task_with_gemini
 )
@@ -19,7 +18,9 @@ from pathlib import Path
 import time
 from random import uniform
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+
 
 # Закрываем chrom перед началом
 kill_all_chrome()

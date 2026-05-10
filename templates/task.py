@@ -8,14 +8,14 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 import re
-from dotenv import load_dotenv
-from pathlib import Path
+#from dotenv import load_dotenv
+#from pathlib import Path
 import base64
 from google import genai
 
+#BASE_DIR = Path(__file__).resolve().parent.parent
+#load_dotenv(BASE_DIR / ".env")
 
-
-load_dotenv()
 
 
 def ai_name_list():
@@ -377,6 +377,16 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
     return text
 
 
+def clean_ai_response(text: str) -> str:
+    text = text.strip()
+
+    # Удаляем markdown fences
+    text = re.sub(r"```\w*", "", text)
+    text = text.replace("```", "")
+
+    return text.strip()
+
+
 def complete_task_with_gemini(task_text: str) -> str:
     """
     Отправляет задачу в Gemini 2.5 Flash и возвращает текстовый ответ.
@@ -385,11 +395,12 @@ def complete_task_with_gemini(task_text: str) -> str:
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     response = client.models.generate_content(
-        model="gemini‑2.5‑flash",
+        model="gemini-2.5-flash",
         contents=f"Ты решаешь задачи для Stepik. Выводи только код:\n{task_text}"
     )
 
-    return response.output_text or ""
+    # Очищаем текст b возвращаем ответ
+    return clean_ai_response(response.text or "")
 
 
 def insert_code_into_editor(driver, code_text: str, timeout=10) -> bool:
