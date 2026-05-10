@@ -11,6 +11,10 @@ import re
 from dotenv import load_dotenv
 from pathlib import Path
 import base64
+import google.generativeai as genai
+
+
+
 
 load_dotenv()
 
@@ -372,6 +376,43 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
 
     print("Ответ от ИИ:\n", text)
     return text
+
+
+def complete_task_with_gemini(task_text: str, image_paths: Optional[List[str]] = None) -> str:
+    """
+    Отправляет задачу в Gemini 2.5 Flash и возвращает ответ в виде текста.
+    Если переданы пути к изображениям, они будут приложены к запросу.
+
+    :param task_text: Текст задачи
+    :param image_paths: Список путей к изображениям (опционально)
+    :return: Ответ модели в виде текста
+    """
+
+    # Настройка API
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-2.5-flash")
+
+    # Контекст для модели
+    context = (
+        "Ты решаешь задачи для Stepik. "
+        "Выводи ТОЛЬКО код, без markdown, без ``` и тд.\n\n"
+    )
+
+    # Формируем содержимое запроса
+    contents = [context + task_text]
+
+    if image_paths:
+        for path in image_paths:
+            try:
+                img = Image.open(path)
+                contents.append(img)
+            except Exception as e:
+                print(f"❌ Не удалось открыть изображение {path}: {e}")
+
+    # Отправка запроса
+    response = model.generate_content(contents)
+
+    return response.text
 
 
 def insert_code_into_editor(driver, code_text: str, timeout=10) -> bool:
