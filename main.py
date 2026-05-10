@@ -9,7 +9,8 @@ from templates.task import (
     check_answer,
     extract_errors_text,
     extract_comments_text,
-    complete_task
+    complete_task,
+    extract_all_images
 
 )
 from templates.clean import kill_all_chrome

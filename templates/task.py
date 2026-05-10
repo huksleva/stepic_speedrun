@@ -10,6 +10,7 @@ import threading
 import re
 import base64
 from google import genai
+from pathlib import Path
 
 
 def ai_name_list():
