@@ -3,7 +3,6 @@ import os
 from templates.enter_next_page import next_page, next_button_element
 from templates.task import (
     extract_task_text,
-    complete_task,
     insert_code_into_editor,
     click_send_button,
     click_try_again_button,
@@ -97,20 +96,20 @@ with (webdriver.Chrome(options=options) as driver):
             # Если пытаемся решить задание 1-й раз
             if err_count == 0:
                 task_text = extract_task_text(driver) + extract_errors_text(driver)
-                task_text += extract_comments_text(driver)[:1000]  # Ограничение по кол-ву символов для комментариев
+                task_text += extract_comments_text(driver)[:5000]  # Ограничение по кол-ву символов для комментариев
             # Если пытаемся уже не в первый раз
             else:
-                task_text = extract_errors_text(driver) + extract_comments_text(driver)[:10000]
+                task_text = extract_errors_text(driver) + extract_comments_text(driver)[:100000]
             #print(task_text)
 
             # Изображения
-            print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
-            imgs = extract_all_images(driver)
+            #print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
+            #imgs = extract_all_images(driver)
 
             # Отправляем текст и изображения
             print("ОТПРАВКА ТЕКСТА И ИЗОБРАЖЕНИЙ ИИ")
             # answer = complete_task(task_text, imgs)
-            answer = complete_task_with_gemini(task_text, imgs)
+            answer = complete_task_with_gemini(task_text)
 
             # Остальная логика
             click_try_again_button(driver)

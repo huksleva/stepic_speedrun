@@ -11,9 +11,7 @@ import re
 from dotenv import load_dotenv
 from pathlib import Path
 import base64
-from typing import List, Optional
 from google import genai
-# from google.genai import types
 
 
 
@@ -379,53 +377,19 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
     return text
 
 
-def complete_task_with_gemini(task_text: str, image_paths: Optional[List[str]] = None) -> str:
+def complete_task_with_gemini(task_text: str) -> str:
     """
     Отправляет задачу в Gemini 2.5 Flash и возвращает текстовый ответ.
     Поддержка изображений через attachments.
-
-    :param task_text: Текст задачи
-    :param image_paths: Список путей к изображениям
-    :return: Ответ модели в виде текста
     """
-
-    # Настройка API
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-    # Контекст для модели
-    context = (
-        "Ты решаешь задачи для Stepik. "
-        "Выводи ТОЛЬКО код, без markdown, без ``` и тд.\n\n"
+    response = client.models.generate_content(
+        model="gemini‑2.5‑flash",
+        contents=f"Ты решаешь задачи для Stepik. Выводи только код:\n{task_text}"
     )
 
-    # Сообщение пользователя (только текст)
-    messages = [
-        {"author": "user", "content": [context + task_text]}
-    ]
-
-    # Формируем attachments для изображений
-    attachments = []
-    if image_paths:
-        for path in image_paths:
-            try:
-                with open(path, "rb") as f:
-                    data = f.read()
-                mime_type = mimetypes.guess_type(path)[0] or "image/png"
-                attachments.append({
-                    "type": "image",
-                    "image_bytes": data
-                })
-            except Exception as e:
-                print(f"❌ Не удалось открыть изображение {path}: {e}")
-
-    # Отправка запроса
-    response = client.chats.completions.create(
-        model="gemini-2.5-flash",
-        messages=messages,
-        attachments=attachments  # <-- сюда передаются картинки
-    )
-
-    return response.text or ""
+    return response.output_text or ""
 
 
 def insert_code_into_editor(driver, code_text: str, timeout=10) -> bool:
