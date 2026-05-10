@@ -11,8 +11,7 @@ from templates.task import (
     extract_errors_text,
     extract_all_images,
     extract_comments_text,
-    show_system_alert,
-    show_system_alert_nonblocking
+    complete_task_with_gemini
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -110,7 +109,8 @@ with (webdriver.Chrome(options=options) as driver):
 
             # Отправляем текст и изображения
             print("ОТПРАВКА ТЕКСТА И ИЗОБРАЖЕНИЙ ИИ")
-            answer = complete_task(task_text, imgs)
+            # answer = complete_task(task_text, imgs)
+            answer = complete_task_with_gemini(task_text, imgs)
 
             # Остальная логика
             click_try_again_button(driver)

@@ -11,8 +11,9 @@ import re
 from dotenv import load_dotenv
 from pathlib import Path
 import base64
-import google.generativeai as genai
-
+from typing import List, Optional
+from google import genai
+# from google.genai import types
 
 
 
@@ -380,17 +381,16 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
 
 def complete_task_with_gemini(task_text: str, image_paths: Optional[List[str]] = None) -> str:
     """
-    Отправляет задачу в Gemini 2.5 Flash и возвращает ответ в виде текста.
-    Если переданы пути к изображениям, они будут приложены к запросу.
+    Отправляет задачу в Gemini 2.5 Flash и возвращает текстовый ответ.
+    Поддержка изображений через attachments.
 
     :param task_text: Текст задачи
-    :param image_paths: Список путей к изображениям (опционально)
+    :param image_paths: Список путей к изображениям
     :return: Ответ модели в виде текста
     """
 
     # Настройка API
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     # Контекст для модели
     context = (
@@ -398,21 +398,34 @@ def complete_task_with_gemini(task_text: str, image_paths: Optional[List[str]] =
         "Выводи ТОЛЬКО код, без markdown, без ``` и тд.\n\n"
     )
 
-    # Формируем содержимое запроса
-    contents = [context + task_text]
+    # Сообщение пользователя (только текст)
+    messages = [
+        {"author": "user", "content": [context + task_text]}
+    ]
 
+    # Формируем attachments для изображений
+    attachments = []
     if image_paths:
         for path in image_paths:
             try:
-                img = Image.open(path)
-                contents.append(img)
+                with open(path, "rb") as f:
+                    data = f.read()
+                mime_type = mimetypes.guess_type(path)[0] or "image/png"
+                attachments.append({
+                    "type": "image",
+                    "image_bytes": data
+                })
             except Exception as e:
                 print(f"❌ Не удалось открыть изображение {path}: {e}")
 
     # Отправка запроса
-    response = model.generate_content(contents)
+    response = client.chats.completions.create(
+        model="gemini-2.5-flash",
+        messages=messages,
+        attachments=attachments  # <-- сюда передаются картинки
+    )
 
-    return response.text
+    return response.text or ""
 
 
 def insert_code_into_editor(driver, code_text: str, timeout=10) -> bool:
