@@ -8,14 +8,8 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 import re
-#from dotenv import load_dotenv
-#from pathlib import Path
 import base64
 from google import genai
-
-#BASE_DIR = Path(__file__).resolve().parent.parent
-#load_dotenv(BASE_DIR / ".env")
-
 
 
 def ai_name_list():
@@ -378,11 +372,12 @@ def complete_task(task_text: str, image_paths: list = None) -> str:
 
 
 def clean_ai_response(text: str) -> str:
-    text = text.strip()
+    # 1. Убираем открывающий блок (```sql, ```python или просто ```)
+    # Паттерн ищет ``` в начале строки, затем язык (опционально), затем перенос строки
+    text = re.sub(r'^```\w*\n?', '', text, flags=re.MULTILINE)
 
-    # Удаляем markdown fences
-    text = re.sub(r"```\w*", "", text)
-    text = text.replace("```", "")
+    # 2. Убираем закрывающий блок (```) в конце
+    text = re.sub(r'\n?```$', '', text, flags=re.MULTILINE)
 
     return text.strip()
 
@@ -540,8 +535,5 @@ def click_send_button(driver, timeout=10) -> bool:
     except TimeoutException:
         print("⚠️ Кнопка не найдена по классу")
         return False
-
-
-
 
 
