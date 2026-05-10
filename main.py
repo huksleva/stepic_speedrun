@@ -9,7 +9,8 @@ from templates.task import (
     check_answer,
     extract_errors_text,
     extract_comments_text,
-    complete_task_with_gemini
+    complete_task
+
 )
 from templates.clean import kill_all_chrome
 from templates.bool_fun import is_end
@@ -17,7 +18,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import time
 from random import uniform
-import requests
+# import requests
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -105,13 +106,13 @@ with (webdriver.Chrome(options=options) as driver):
             #print(task_text)
 
             # Изображения
-            #print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
-            #imgs = extract_all_images(driver)
+            print("ИЗВЛЕЧЕНИЕ ИЗОБРАЖЕНИЙ СО СТРАНИЦЫ")
+            imgs = extract_all_images(driver)
 
             # Отправляем текст и изображения
             print("ОТПРАВКА ТЕКСТА И ИЗОБРАЖЕНИЙ ИИ")
-            # answer = complete_task(task_text, imgs)
-            answer = complete_task_with_gemini(task_text)
+            answer = complete_task(task_text, imgs)
+            #answer = complete_task_with_gemini(task_text)
 
             # Остальная логика
             click_try_again_button(driver)
